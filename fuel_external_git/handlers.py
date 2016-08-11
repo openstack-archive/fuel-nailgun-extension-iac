@@ -1,20 +1,14 @@
-import json
-import os
-import web
-
-from git import Repo
-
 from nailgun.api.v1.handlers.base import SingleHandler, CollectionHandler
 from nailgun.api.v1.handlers.base import content
 from nailgun.api.v1.validators import base
 from nailgun.errors import errors
-from nailgun.logger import logger
 from nailgun import objects
 
-from fuel_external_git.objects import GitRepo, GitRepoCollection 
+from fuel_external_git.objects import GitRepo, GitRepoCollection
 from fuel_external_git import json_schema
 
 REPOS_DIR = '/var/lib/fuel_repos'
+
 
 class GitRepoValidator(base.BasicValidator):
 
@@ -44,9 +38,11 @@ class GitRepoValidator(base.BasicValidator):
 
         return d
 
+
 class GitRepoCollectionHandler(CollectionHandler):
     collection = GitRepoCollection
     validator = GitRepoValidator
+
 
 class GitRepoHandler(SingleHandler):
     single = GitRepo
@@ -99,4 +95,3 @@ class GitRepoHandler(SingleHandler):
         d_e = self.get_object_or_404(self.single, obj_id)
         self.single.delete(d_e)
         raise self.http(204)
-

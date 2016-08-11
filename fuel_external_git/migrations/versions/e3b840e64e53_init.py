@@ -1,7 +1,7 @@
 """Init
 
 Revision ID: e3b840e64e53
-Revises: 
+Revises:
 Create Date: 2016-08-09 16:59:36.504052
 
 """
@@ -12,9 +12,9 @@ down_revision = None
 branch_labels = None
 depends_on = None
 
+import sqlalchemy as sa
 from alembic import context
 from alembic import op
-import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql as psql
 
 
@@ -32,7 +32,6 @@ def upgrade():
         sa.Column('user_key', sa.String(255))
                   server_default='', nullable=False))
         sa.UniqueConstraint('env_id', name='_env_id_unique')
-        
 
 
 def downgrade():

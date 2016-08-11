@@ -1,4 +1,4 @@
-single_schema ={
+single_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "Cluster",
     "description": "Serialized Cluster object",

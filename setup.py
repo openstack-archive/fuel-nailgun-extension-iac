@@ -7,6 +7,7 @@ from nailgun.db import db
 from nailgun.db.sqlalchemy.models import Cluster
 from nailgun.db.sqlalchemy.models import Release
 
+
 def package_files(directory):
     paths = []
     for (path, directories, filenames) in os.walk(directory):
@@ -16,7 +17,9 @@ def package_files(directory):
 
 extra_files = package_files('fuel_external_git/migrations')
 
+
 class ExtInstall(install):
+
     @classmethod
     def _set_extensions(self, nailgun_objects):
         for obj, extensions in nailgun_objects.items():
@@ -53,7 +56,7 @@ setup(
           'nailgun.extensions': [
              'fuel_external_git = fuel_external_git.extension:ExternalGit',
            ],
-           'fuelclient': [
+          'fuelclient': [
               'set-git-repo = fuel_external_git.fuelclient:Generate',
            ]
        },
