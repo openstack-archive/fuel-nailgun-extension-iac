@@ -11,7 +11,12 @@ from fuel_external_git import handlers
 
 
 class OpenStackConfigPipeline(BasePipeline):
-    pass
+    @classmethod
+    def process_deployment(cls, data, cluster, nodes, **kwargs):
+        """Genereate OpenStack configuration hash based on configuration files
+           stored in git repository configured for a particular environment
+        """
+        pass
 
 class ExternalGit(BaseExtension):
     name = 'fuel_external_git'
