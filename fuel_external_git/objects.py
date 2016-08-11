@@ -52,6 +52,7 @@ class GitRepo(NailgunObject):
     def checkout(self, instance):
         commit = instance.repo.remotes.origin.fetch(refspec=instance.ref)[0].commit
         instance.repo.head.reference = commit
+        instance.repo.head.reset(index=True, working_tree=True)
         
     def remove_repo(self):
         pass
