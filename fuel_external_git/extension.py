@@ -1,5 +1,4 @@
 import os
-import ConfigParser
 
 from nailgun.logger import logger
 
@@ -9,6 +8,7 @@ from nailgun.extensions import BasePipeline
 from fuel_external_git import handlers
 from fuel_external_git.objects import GitRepo
 from fuel_external_git import const
+from fuel_external_git.openstack_config import OpenStackConfig
 
 
 class OpenStackConfigPipeline(BasePipeline):
@@ -32,31 +32,16 @@ class OpenStackConfigPipeline(BasePipeline):
         repo = GitRepo.get_by_cluster_id(cluster.id)
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
+
         config_files = [conf for conf in os.listdir(repo_path)
                         if conf.endswith('conf')]
 
         adv_config = {}
         for conf_file in config_files:
-            config = ConfigParser.ConfigParser()
-            config.read(os.path.join(repo_path, conf_file))
-            config_resource_name = "{}_config".\
-                                   format("".join(conf_file.split('.')[:-1]))
-            config_resource = {}
-            default_item_set = set(config.items('DEFAULT'))
-            # Processing all sections from config file except DEFAULT
-            # DEFAULT section is processed differently in ConfigParser
-            for section in config.sections():
-                config_key_values = set(config.items(section)) \
-                                - default_item_set
-                for key, value in config_key_values:
-                    params = {'value': value}
-                    config_resource["{0}/{1}".format(section, key)] = params
-
-            # Add parameters from DEFAULT section
-            for key, value in default_item_set:
-                config_resource["DEFAULT/{}".format(key)] = {'value': value}
-
-            adv_config[config_resource_name] = config_resource
+            # TODO(dukov) Config resource name may differ from file name
+            config = OpenStackConfig(os.path.join(repo_path, conf_file),
+                                     conf_file)
+            adv_config[config.config_name] = config.to_config_dict()
         if adv_config != {}:
             for node_config in data:
                 node_config['configuration'] = adv_config
