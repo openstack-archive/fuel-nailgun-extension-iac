@@ -40,6 +40,8 @@ class GitRepo(NailgunObject):
     
     @classmethod
     def create(self, data):
+        if not os.path.exists(const.REPOS_DIR):
+            os.mkdir(const.REPOS_DIR)
         repo_path = os.path.join(const.REPOS_DIR, data['repo_name'])
         if os.path.exists(repo_path):
             shutil.rmtree(repo_path)

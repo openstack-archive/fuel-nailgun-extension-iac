@@ -1,4 +1,5 @@
 import os
+import yaml
 
 from nailgun.logger import logger
 
@@ -32,6 +33,19 @@ class OpenStackConfigPipeline(BasePipeline):
         repo = GitRepo.get_by_cluster_id(cluster.id)
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
+
+        # Read config for overrides
+        # TODO(dukov) We need to ba able to differentiate configs.
+        # Overrides file should contain following mapping
+        #  - role:config_file
+        #  - node_id:config_file
+        # Config options from files for roles should override global
+        # configs (placed in repo root).
+        # Config options from files for nodes should override global
+        # and roles config oprions
+        overrides_file = os.path.join(repo_path, 'overrides.yaml')
+        if os.path.exists(overrides_file):
+            overrides = yaml.load(open(overrides_file))
 
         config_files = [conf for conf in os.listdir(repo_path)
                         if conf.endswith('conf')]
