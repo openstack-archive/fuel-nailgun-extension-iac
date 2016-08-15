@@ -9,7 +9,7 @@ from nailgun.extensions import BasePipeline
 from fuel_external_git import handlers
 from fuel_external_git.objects import GitRepo
 from fuel_external_git import const
-from fuel_external_git.openstack_config import OpenStackConfig
+from fuel_external_git import utils
 
 
 class OpenStackConfigPipeline(BasePipeline):
@@ -34,11 +34,12 @@ class OpenStackConfigPipeline(BasePipeline):
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
 
+        global_config = utils.get_config_hash(repo_path)
+
         # Read config for overrides
-        # TODO(dukov) We need to ba able to differentiate configs.
         # Overrides file should contain following mapping
-        #  - role:config_file
-        #  - node_id:config_file
+        #  - role:config_file_dir
+        #  - node_id:config_file_dir
         # Config options from files for roles should override global
         # configs (placed in repo root).
         # Config options from files for nodes should override global
@@ -46,20 +47,30 @@ class OpenStackConfigPipeline(BasePipeline):
         overrides_file = os.path.join(repo_path, 'overrides.yaml')
         if os.path.exists(overrides_file):
             overrides = yaml.load(open(overrides_file))
+        else:
+            overrides = {}
 
-        config_files = [conf for conf in os.listdir(repo_path)
-                        if conf.endswith('conf')]
+        override_configs = {}
+        # ent = roles|nodes
+        for ent, override in overrides.items():
+            override_configs[ent] = {}
+            # key = role_name|node_id
+            for key, path in override.items():
+                file_dir = os.path.join(repo_path, path)
+                override_configs[ent][key] = utils.get_config_hash(file_dir)
 
-        adv_config = {}
-        for conf_file in config_files:
-            # TODO(dukov) Config resource name may differ from file name
-            config = OpenStackConfig(os.path.join(repo_path, conf_file),
-                                     conf_file)
-            adv_config[config.config_name] = config.to_config_dict()
-        if adv_config != {}:
-            for node_config in data:
-                node_config['configuration'] = adv_config
-        logger.info(adv_config)
+        for node_config in data:
+            roles = node_config['roles']
+            uid = node_config['uid']
+            for role in roles:
+                utils.deep_merge(global_config,
+                                 override_configs['roles'].get(role, {}))
+
+            utils.deep_merge(global_config,
+                             override_configs['nodes'].get(uid, {}))
+
+            node_config['configuration'] = global_config
+            logger.debug("Node config from git {}".format(global_config))
         return data
 
 
