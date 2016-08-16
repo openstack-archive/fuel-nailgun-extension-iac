@@ -7,6 +7,7 @@ Deployed Fuel 9.0 (Mitaka) Master Node
 ### Installation
 Execute following commands on Fuel Master node
 ```
+# yum install git python-pip
 # git clone https://github.com/dukov/fuel-external-git
 # cd fuel-external-git
 # pip install -r requirements.txt
@@ -17,16 +18,16 @@ Execute following commands on Fuel Master node
 
 ### API
 Extension supports following REST API calls
-#### GET /clusters/git-repos 
-Returns list of configured git repos for all clusters/environments 
-Example 
+#### GET /clusters/git-repos
+Returns list of configured git repos for all clusters/environments
+Example
 ```
 curl -H "X-Auth-Token: $(fuel token)" http://localhost:8000/api/v1/clusters/git-repos
 ```
- 
+
 #### POST /clusters/git-repos
 Create new repo for particular cluster
-Input data schema:   
+Input data schema:
 ```
 "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "Cluster",
@@ -40,15 +41,15 @@ Input data schema:
         "ref": {"type": "string"},
         "user_key": {"type": "string"}
 ```
- 
+
 Example
 ```
 curl -X POST -H "X-Auth-Token: $(fuel token)" http://localhost:8000/api/v1/clusters/git-repos -d '{"user_key": "", "git_url": "https://github.com/dukov/openstack-configs", "env_id": 5, "ref": "master", "repo_name": "osconf1"}'
 ```
- 
+
 #### PUT /clusters/(?P<cluster_id>\d+)/git-repos/(?P<obj_id>\d+)
 Updates repo with obj_id info for cluster cluster_id
-Example: 
+Example:
 ```
 curl -X PUT -H 'X-Auth-Token: $(fuel token)' http://localhost:8000/api/v1/clusters/4/git-repos/2 -d '{"ref": "master"}'
 ```
