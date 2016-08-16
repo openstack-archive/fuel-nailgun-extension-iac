@@ -16,6 +16,7 @@ def package_files(directory):
     return paths
 
 extra_files = package_files('fuel_external_git/migrations')
+extra_files.append('settings.yaml')
 
 
 class ExtInstall(install):

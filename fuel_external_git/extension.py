@@ -8,6 +8,7 @@ from nailgun.extensions import BasePipeline
 
 from fuel_external_git import handlers
 from fuel_external_git.objects import GitRepo
+from fuel_external_git.settings import GitExtensionSettings
 from fuel_external_git import const
 from fuel_external_git import utils
 
@@ -33,8 +34,9 @@ class OpenStackConfigPipeline(BasePipeline):
         repo = GitRepo.get_by_cluster_id(cluster.id)
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
+        resource_mapping = ExternalGit.ext_settings['resource_mapping']
 
-        global_config = utils.get_config_hash(repo_path)
+        global_config = utils.get_config_hash(repo_path, resource_mapping)
 
         # Read config for overrides
         # Overrides file should contain following mapping
@@ -57,7 +59,8 @@ class OpenStackConfigPipeline(BasePipeline):
             # key = role_name|node_id
             for key, path in override.items():
                 file_dir = os.path.join(repo_path, path)
-                override_configs[ent][key] = utils.get_config_hash(file_dir)
+                config_hash = utils.get_config_hash(file_dir, resource_mapping)
+                override_configs[ent][key] = config_hash
 
         for node_config in data:
             roles = node_config['roles']
@@ -70,7 +73,7 @@ class OpenStackConfigPipeline(BasePipeline):
                              override_configs['nodes'].get(uid, {}))
 
             node_config['configuration'] = global_config
-            logger.debug("Node config from git {}".format(global_config))
+            logger.info("Node config from git {}".format(global_config))
         return data
 
 
@@ -88,6 +91,8 @@ class ExternalGit(BaseExtension):
     data_pipelines = [
         OpenStackConfigPipeline,
     ]
+
+    ext_settings = GitExtensionSettings().config
 
     @classmethod
     def alembic_migrations_path(cls):

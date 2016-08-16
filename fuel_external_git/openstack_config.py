@@ -1,13 +1,26 @@
+import os
 import ConfigParser
+
+from nailgun.logger import logger
 
 
 class OpenStackConfig(object):
-    def __init__(self, config_file, resource_name):
+    def __init__(self, config_file, resource_mapping):
+        cf_basename = os.path.basename(config_file)
         self.config = ConfigParser.ConfigParser()
         self.config.read(config_file)
-        # TODO(dukov) resource name can differ from filename
-        self.config_name = "{}_config".\
-                           format("".join(resource_name.split('.')[:-1]))
+        self.config_name = self._get_resource_name(cf_basename,
+                                                   resource_mapping)
+        logger.debug("Initalized Config {0}. Config resource name {1}.".\
+                      format(config_file, self.config_name))
+
+    def _get_resource_name(self, config_file, resource_mapping):
+        res = "{}_config".format("".join(config_file.split('.')[:-1]))
+        for resource_name, val in  resource_mapping.items():
+            if val['alias'] == config_file:
+                res = resource_name
+                break
+        return res
 
     def to_config_dict(self):
         """Function returns OpenStack config file in dictionary form
