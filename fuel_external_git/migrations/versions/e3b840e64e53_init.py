@@ -23,15 +23,15 @@ def upgrade():
     op.create_table(
         table_prefix + 'repos',
         sa.Column('id', sa.Integer(), nullable=False, primary_key=True),
-        sa.Column('repo_name', sa.Unicode(100), nullable=False)
+        sa.Column('repo_name', sa.Unicode(100), nullable=False),
         sa.Column('env_id', sa.Integer(), nullable=False),
         sa.Column('git_url', sa.String(255),
                   server_default='', nullable=False),
         sa.Column('ref', sa.String(255),
-                  server_default='', nullable=False))
-        sa.Column('user_key', sa.String(255))
-                  server_default='', nullable=False))
-        sa.UniqueConstraint('env_id', name='_env_id_unique')
+                  server_default='', nullable=False),
+        sa.Column('user_key', sa.String(255),
+                  server_default='', nullable=False),
+        sa.UniqueConstraint('env_id', name='_env_id_unique'))
 
 
 def downgrade():
