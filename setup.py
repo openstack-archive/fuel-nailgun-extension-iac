@@ -58,7 +58,10 @@ setup(
              'fuel_external_git = fuel_external_git.extension:ExternalGit',
            ],
           'fuelclient': [
-              'set-git-repo = fuel_external_git.fuelclient:Generate',
+              'gitrepo_list = fuel_external_git.fuelclient:GitRepoList',
+              'gitrepo_create = fuel_external_git.fuelclient:AddRepo',
+              'gitrepo_delete = fuel_external_git.fuelclient:DeleteRepo',
+              'gitrepo_update = fuel_external_git.fuelclient:UpdateRepo',
            ]
        },
        zip_safe=False,
