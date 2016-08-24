@@ -172,3 +172,27 @@ class UpdateRepo(command.Command):
         path = "/clusters/{0}/git-repos/{1}"
         APIClient.put_request(path.format(env, parsed_args.repo), data)
         return (self.columns, data)
+
+
+class InitRepo(command.Command):
+    columns = (
+        'id'
+    )
+
+    def get_parser(self, prog_name):
+        parser = super(InitRepo, self).get_parser(prog_name)
+        parser.add_argument('--repo',
+                            type=int,
+                            help='Repo ID to delete',
+                            required=True)
+        return parser
+
+    def take_action(self, parsed_args):
+        repo_id = parsed_args.repo
+        repos = APIClient.get_request('/clusters/git-repos/')
+        env = [repo['env_id'] for repo in repos
+               if repo['id'] == parsed_args.repo][0]
+
+        init_path = "/clusters/{0}/git-repos/{1}/init"
+        result = APIClient.put_request(init_path.format(env, repo_id), {})
+        return (self.columns, {})

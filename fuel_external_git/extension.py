@@ -14,6 +14,7 @@ from fuel_external_git import utils
 
 
 class OpenStackConfigPipeline(BasePipeline):
+    # TODO (dukov) add cluster remove callback
     @classmethod
     def process_deployment(cls, data, cluster, nodes, **kwargs):
         """Genereate OpenStack configuration hash based on configuration files
@@ -86,7 +87,10 @@ class ExternalGit(BaseExtension):
              'handler': handlers.GitRepoCollectionHandler},
             {'uri':
                 r'/clusters/(?P<cluster_id>\d+)/git-repos/(?P<obj_id>\d+)?$',
-             'handler': handlers.GitRepoHandler}]
+             'handler': handlers.GitRepoHandler},
+            {'uri':
+                r'/clusters/(?P<env_id>\d+)/git-repos/(?P<obj_id>\d+)/init?$',
+             'handler': handlers.GitRepoInit}]
 
     data_pipelines = [
         OpenStackConfigPipeline,

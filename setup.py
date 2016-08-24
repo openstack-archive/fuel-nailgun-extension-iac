@@ -16,6 +16,7 @@ def package_files(directory):
     return paths
 
 extra_files = package_files('fuel_external_git/migrations')
+extra_files += package_files('fuel_external_git/templates')
 extra_files.append('settings.yaml')
 
 
@@ -62,6 +63,7 @@ setup(
               'gitrepo_create = fuel_external_git.fuelclient:AddRepo',
               'gitrepo_delete = fuel_external_git.fuelclient:DeleteRepo',
               'gitrepo_update = fuel_external_git.fuelclient:UpdateRepo',
+              'gitrepo_init = fuel_external_git.fuelclient:InitRepo',
            ]
        },
        zip_safe=False,
