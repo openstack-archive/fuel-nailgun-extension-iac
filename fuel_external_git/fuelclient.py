@@ -152,10 +152,14 @@ class UpdateRepo(command.Command):
                             help=('Git ref. This can be either a branch '
                                   'or Gerrit refspec.'),
                             required=False)
+
+        parser.add_argument('--key',
+                            type=str,
+                            help='Path to private key file for accessing repo',
+                            required=False)
         return parser
 
     def take_action(self, parsed_args):
-        # TODO(dukov) We need to handle key update here as well
         param_mapping = {
             'name': 'repo_name',
             'url': 'git_url',
@@ -170,6 +174,11 @@ class UpdateRepo(command.Command):
         env = [repo['env_id'] for repo in repos
                if repo['id'] == parsed_args.repo][0]
         path = "/clusters/{0}/git-repos/{1}"
+
+        if parsed_args.key:
+            with open(parsed_args.key) as key_file:
+                data['key'] = key_file.read()
+
         APIClient.put_request(path.format(env, parsed_args.repo), data)
         return (self.columns, data)
 

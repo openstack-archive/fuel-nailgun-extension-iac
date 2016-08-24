@@ -36,8 +36,11 @@ class OpenStackConfigPipeline(BasePipeline):
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
         resource_mapping = ExternalGit.ext_settings['resource_mapping']
+        exts_list = utils.get_file_exts_list(resource_mapping)
 
-        global_config = utils.get_config_hash(repo_path, resource_mapping)
+        global_config = utils.get_config_hash(repo_path,
+                                              resource_mapping,
+                                              exts=exts_list)
 
         # Read config for overrides
         # Overrides file should contain following mapping
@@ -60,7 +63,9 @@ class OpenStackConfigPipeline(BasePipeline):
             # key = role_name|node_id
             for key, path in override.items():
                 file_dir = os.path.join(repo_path, path)
-                config_hash = utils.get_config_hash(file_dir, resource_mapping)
+                config_hash = utils.get_config_hash(file_dir,
+                                                    resource_mapping,
+                                                    exts=exts_list)
                 override_configs[ent][key] = config_hash
 
         for node_config in data:

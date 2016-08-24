@@ -4,7 +4,14 @@ from nailgun.logger import logger
 from fuel_external_git.openstack_config import OpenStackConfig
 
 
-def get_config_hash(file_dir, resource_mapping):
+def get_file_exts_list(resource_mapping):
+    res = set()
+    for resouce in resource_mapping:
+        res.add(resouce['path'].split('.')[-1])
+    return res
+
+
+def get_config_hash(file_dir, resource_mapping, exts=['conf']):
     res = {}
     if not os.path.isdir(file_dir):
         logger.debug(
@@ -12,9 +19,8 @@ def get_config_hash(file_dir, resource_mapping):
         return {}
 
     conf_files = [conf for conf in os.listdir(file_dir)
-                  if conf.endswith('conf')]
+                  if conf.split('.')[-1] in exts]
     for conf_file in conf_files:
-        # TODO(dukov) Config resource name may differ from file name
         config = OpenStackConfig(os.path.join(file_dir, conf_file),
                                  resource_mapping)
         res[config.config_name] = config.to_config_dict()
