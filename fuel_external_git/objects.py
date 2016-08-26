@@ -42,11 +42,12 @@ class GitRepo(NailgunObject):
                                                   instance.repo_name))
             except exc.NoSuchPathError:
                 logger.debug("Repo folder does not exist. Cloning repo")
-                self._create_key_file(instance.repo_name, instance.key)
+                self._create_key_file(instance.repo_name, instance.user_key)
                 os.environ['GIT_SSH_COMMAND'] = \
-                        self._get_ssh_cmd(instance.repo_name)
+                    self._get_ssh_cmd(instance.repo_name)
 
-                repo = Repo.clone_from(data['git_url'], repo_path)
+                repo_path = os.path.join(const.REPOS_DIR, instance.repo_name)
+                repo = Repo.clone_from(instance.git_url, repo_path)
                 instance.repo = repo
         return instance
 
@@ -59,7 +60,7 @@ class GitRepo(NailgunObject):
             logger.debug('Repo directory exists. Removing...')
             shutil.rmtree(repo_path)
 
-        self._create_key_file(data['repo_name'], data['key'])
+        self._create_key_file(data['repo_name'], data['user_key'])
         os.environ['GIT_SSH_COMMAND'] = self._get_ssh_cmd(data['repo_name'])
         repo = Repo.clone_from(data['git_url'], repo_path)
 
@@ -70,10 +71,9 @@ class GitRepo(NailgunObject):
     @classmethod
     def update(self, instance, data):
         super(GitRepo, self).update(instance, data)
-        if 'key' in data:
+        if 'user_key' in data:
             instance = GitRepo.get_by_cluster_id(instance.env_id)
-            self._create_key_file(instance.repo_name, instance.key)
-
+            self._create_key_file(instance.repo_name, instance.user_key)
 
     @classmethod
     def checkout(self, instance):

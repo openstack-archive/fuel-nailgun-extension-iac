@@ -81,7 +81,7 @@ class AddRepo(command.Command):
 
         if parsed_args.key:
             with open(parsed_args.key) as key_file:
-                data['key'] = key_file.read()
+                data['user_key'] = key_file.read()
 
         result = APIClient.post_request('/clusters/git-repos/', data)
         return (self.columns, data)
@@ -177,7 +177,7 @@ class UpdateRepo(command.Command):
 
         if parsed_args.key:
             with open(parsed_args.key) as key_file:
-                data['key'] = key_file.read()
+                data['user_key'] = key_file.read()
 
         APIClient.put_request(path.format(env, parsed_args.repo), data)
         return (self.columns, data)
