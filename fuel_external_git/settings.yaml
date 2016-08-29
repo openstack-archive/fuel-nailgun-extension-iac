@@ -2,31 +2,31 @@ resource_mapping:
   ceilometer_api_paste_ini:
     alias: ceilometer-api-paste.ini
     path: /etc/ceilometer/api-paste.ini
-  ceilometer_config:
+  ceilometer:
     alias: ceilometer.conf
     path: /etc/ceilometer/ceilometer.conf
   cinder_api_paste_ini:
     alias: cinder-api-paste.ini
     path: /etc/cinder/api-paste.ini
-  cinder_config:
+  cinder:
     alias: cinder.conf
     path: /etc/cinder/cinder.conf
-  glance_api_config:
+  glance_api:
     alias: glance-api.conf
     path: /etc/glance/glance-api.conf
-  glance_cache_config:
+  glance_cache:
     alias: glance-cache.conf
     path: /etc/glance/glance-cache.conf
-  glance_glare_config:
+  glare_config:
     alias: glance-glare.conf
     path: /etc/glance/glance-glare.conf
-  glance_registry_config:
+  glance_registry:
     alias: glance-registry.conf
     path: /etc/glance/glance-registry.conf
   heat_api_paste_ini:
     alias: heat-api-paste.ini
     path: /etc/heat/api-paste.ini
-  heat_config:
+  heat:
     alias: heat.conf
     path: /etc/heat/heat.conf
   keystone_config:

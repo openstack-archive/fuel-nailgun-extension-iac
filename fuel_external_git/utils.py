@@ -6,8 +6,8 @@ from fuel_external_git.openstack_config import OpenStackConfig
 
 def get_file_exts_list(resource_mapping):
     res = set()
-    for resouce in resource_mapping:
-        res.add(resouce['path'].split('.')[-1])
+    for resource in resource_mapping.values():
+        res.add(resource['path'].split('.')[-1])
     return res
 
 
