@@ -64,6 +64,7 @@ setup(
               'gitrepo_delete = fuel_external_git.fuelclient:DeleteRepo',
               'gitrepo_update = fuel_external_git.fuelclient:UpdateRepo',
               'gitrepo_init = fuel_external_git.fuelclient:InitRepo',
+              'gitrepo_get_configs = fuel_external_git.fuelclient:DownloadConfgs',
            ]
        },
        zip_safe=False,

@@ -1,10 +1,16 @@
 from __future__ import absolute_import
 
+import os
+import fabric.api
+from git import Repo
+from fabric.context_managers import hide
+from cliff import command
+from cliff import lister
+
 from fuelclient.client import APIClient
 from fuelclient.common import data_utils
 
-from cliff import command
-from cliff import lister
+from fuel_external_git.settings import GitExtensionSettings
 
 
 class GitRepoList(lister.Lister, command.Command):
@@ -205,3 +211,101 @@ class InitRepo(command.Command):
         init_path = "/clusters/{0}/git-repos/{1}/init"
         result = APIClient.put_request(init_path.format(env, repo_id), {})
         return (self.columns, {})
+
+
+class DownloadConfgs(command.Command):
+
+    def get_parser(self, prog_name):
+        parser = super(DownloadConfgs, self).get_parser(prog_name)
+        parser.add_argument('--env', type=int, help='Env ID', required=False)
+
+        parser.add_argument('--key_path',
+                            type=str,
+                            help='Path to nodes private key file',
+                            required=False)
+
+        parser.add_argument('--repo_dir',
+                            type=str,
+                            help='Directory to Git repo download',
+                            default='/tmp/repos',
+                            required=False)
+        return parser
+
+    def take_action(self, parsed_args):
+        #TODO(dukov) REFACTORING of this ugly staff
+        ext_settings = GitExtensionSettings().config
+        key = parsed_args.key_path
+        if not key:
+            # NOTE(dukov) this locked with nailgun.
+            from nailgun.settings import settings
+            key = settings.SHOTGUN_SSH_KEY
+
+        nodes = APIClient.get_request('nodes/')
+        repos = APIClient.get_request('/clusters/git-repos/')
+        if parsed_args.env:
+            repos = [repo for repo in repos
+                     if repo['env_id'] == parsed_args.env]
+
+        if not os.path.exists(parsed_args.repo_dir):
+            os.mkdir(parsed_args.repo_dir)
+
+        for repo in repos:
+            key_path = os.path.join(
+                    parsed_args.repo_dir,
+                    repo['repo_name'] + '.key')
+            with open(key_path, 'w') as keyf:
+                keyf.write(repo['user_key'])
+            os.chmod(key_path, 0o600)
+
+            ssh_cmd = 'ssh -o StrictHostKeyChecking=no -i ' + key_path
+            repo_path = os.path.join(parsed_args.repo_dir, repo['repo_name'])
+            if not os.path.exists(repo_path):
+                os.environ['GIT_SSH_COMMAND'] = ssh_cmd
+                gitrepo = Repo.clone_from(repo['git_url'], repo_path)
+            else:
+                gitrepo = Repo(repo_path)
+
+            cfg_branch = repo['ref'] + '_configs'
+            with gitrepo.git.custom_environment(GIT_SSH_COMMAND=ssh_cmd):
+                gitrepo.remotes.origin.fetch()
+                if cfg_branch in gitrepo.heads:
+                    commit = gitrepo.remotes.origin.fetch(refspec=cfg_branch)
+                    commit = commit[0].commit
+                    gitrepo.head.reference = commit
+                    gitrepo.head.reset(index=True, working_tree=True)
+                else:
+                    gitrepo.git.checkout('--orphan', cfg_branch)
+                    gitrepo.git.rm('-r', '-f', repo_path)
+
+            nodes = [node for node in nodes
+                     if node['cluster'] == repo['env_id']]
+
+            for node in nodes:
+                for params in ext_settings['resource_mapping'].values():
+                    path = params['path']
+                    target_path = os.path.join(
+                                      repo_path,
+                                      "node_{}_configs".format(node['id']),
+                                      os.path.basename(path)
+                                  )
+                    with fabric.api.settings(
+                        host_string=node['ip'],
+                        key_filename=key,
+                        timeout=10,
+                        warn_only=True,
+                        abort_on_prompts=True,
+                    ):
+                        try:
+                            fabric.api.get(path, target_path)
+                        except AttributeError:
+                            pass
+                        except SystemExit:
+                            print("Err")
+            if gitrepo.is_dirty(untracked_files=True):
+                gitrepo.git.add('-A')
+                gitrepo.git.commit('-m "Configs updated"')
+                with gitrepo.git.custom_environment(GIT_SSH_COMMAND=ssh_cmd):
+                    push_result = gitrepo.remotes.origin.\
+                            push(refspec='HEAD:' + cfg_branch)
+                    print("Push result {}".format(push_result))
+        return ((),{})
