@@ -3,7 +3,6 @@ from __future__ import absolute_import
 import os
 import fabric.api
 from git import Repo
-from fabric.context_managers import hide
 from cliff import command
 from cliff import lister
 
@@ -232,7 +231,7 @@ class DownloadConfgs(command.Command):
         return parser
 
     def take_action(self, parsed_args):
-        #TODO(dukov) REFACTORING of this ugly staff
+        # TODO(dukov) REFACTORING of this ugly staff
         ext_settings = GitExtensionSettings().config
         key = parsed_args.key_path
         if not key:
@@ -308,4 +307,4 @@ class DownloadConfgs(command.Command):
                     push_result = gitrepo.remotes.origin.\
                             push(refspec='HEAD:' + cfg_branch)
                     print("Push result {}".format(push_result))
-        return ((),{})
+        return ((), {})

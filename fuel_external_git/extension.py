@@ -33,6 +33,8 @@ class OpenStackConfigPipeline(BasePipeline):
                      value: 6000
         """
         repo = GitRepo.get_by_cluster_id(cluster.id)
+        if not repo:
+            return data
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
         resource_mapping = ExternalGit.ext_settings['resource_mapping']

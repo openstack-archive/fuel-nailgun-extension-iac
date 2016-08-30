@@ -20,4 +20,4 @@ class GitExtensionSettings(object):
                     self.config.update(yaml.load(custom_config.read()))
             except Exception as e:
                 logger.error("Error while reading config file %s: %s" %
-                                                     (sf, str(e)))
+                             (sf, str(e)))

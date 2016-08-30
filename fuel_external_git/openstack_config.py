@@ -11,12 +11,12 @@ class OpenStackConfig(object):
         self.config.read(config_file)
         self.config_name = self._get_resource_name(cf_basename,
                                                    resource_mapping)
-        logger.debug("Initalized Config {0}. Config resource name {1}.".\
-                      format(config_file, self.config_name))
+        logger.debug("Initalized Config {0}. Config resource name {1}.".
+                     format(config_file, self.config_name))
 
     def _get_resource_name(self, config_file, resource_mapping):
         res = "{}_config".format("".join(config_file.split('.')[:-1]))
-        for resource_name, val in  resource_mapping.items():
+        for resource_name, val in resource_mapping.items():
             if val['alias'] == config_file:
                 res = resource_name
                 break
