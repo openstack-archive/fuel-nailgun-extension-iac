@@ -1,5 +1,6 @@
 import os
 import yaml
+import copy
 
 from nailgun.logger import logger
 
@@ -56,7 +57,7 @@ class OpenStackConfigPipeline(BasePipeline):
         if os.path.exists(overrides_file):
             overrides = yaml.load(open(overrides_file))
         else:
-            overrides = {}
+            overrides = {'roles': {}, 'nodes': {}}
 
         override_configs = {}
         # ent = roles|nodes
@@ -70,18 +71,24 @@ class OpenStackConfigPipeline(BasePipeline):
                                                     exts=exts_list)
                 override_configs[ent][key] = config_hash
 
+        logger.debug("Override configs {}".format(override_configs))
+
         for node_config in data:
+            common = copy.deepcopy(global_config)
             roles = node_config['roles']
             uid = node_config['uid']
+            logger.debug("Node {0} roles {1}".format(uid, roles))
             for role in roles:
-                utils.deep_merge(global_config,
+                utils.deep_merge(common,
                                  override_configs['roles'].get(role, {}))
 
-            utils.deep_merge(global_config,
+            logger.debug("Config Node {0} with roles {1}".format(uid, common))
+
+            utils.deep_merge(common,
                              override_configs['nodes'].get(uid, {}))
 
-            node_config['configuration'] = global_config
-            logger.info("Node config from git {}".format(global_config))
+            node_config['configuration'] = common
+            logger.info("Node {0} config from git {1}".format(uid, common))
         return data
 
 
