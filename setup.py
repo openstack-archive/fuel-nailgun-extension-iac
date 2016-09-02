@@ -2,10 +2,15 @@ import os
 
 from setuptools import setup
 from setuptools.command.install import install
+try:
+    from nailgun.db import db
+    from nailgun.db.sqlalchemy.models import Cluster
+    from nailgun.db.sqlalchemy.models import Release
 
-from nailgun.db import db
-from nailgun.db.sqlalchemy.models import Cluster
-from nailgun.db.sqlalchemy.models import Release
+    no_nailgun = False
+except:
+    no_nailgun = True
+    
 
 
 def package_files(directory):
@@ -53,7 +58,7 @@ setup(
                     ],
        packages=['fuel_external_git'],
        package_data={'fuel_external_git': extra_files},
-       cmdclass={'install': ExtInstall},
+       cmdclass={'install': ExtInstall} if not no_nailgun else {},
        entry_points={
           'nailgun.extensions': [
              'fuel_external_git = fuel_external_git.extension:ExternalGit',
