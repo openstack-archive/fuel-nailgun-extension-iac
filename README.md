@@ -16,6 +16,110 @@ Execute following commands on Fuel Master node
 # service nailgun reload
 ```
 
+### How to Use
+This extension introduces set of additional Fuel CLI commands which help to accosiate git repo with particular environment and preform CRUD operations this repo.
+```
+  gitrepo create
+  gitrepo delete
+  gitrepo get configs
+  gitrepo init
+  gitrepo list
+  gitrepo update
+```
+#### Fuel CLI
+##### Create association of environment and git repository
+```
+fuel2 gitrepo create [-h] --env ENV --name NAME --url URL --ref REF
+                            [--key KEY]
+
+  --env ENV    ID of environment to configure.
+  --name NAME  Name of the git repository. Will be used as directory name for
+               repository.
+  --url URL    Url of Git repository. User should be specified in this url.
+  --ref REF    Git ref. This can be either a branch or Gerrit refspec.
+  --key KEY    Path to private key file for accessing repo
+```
+For example:
+```
+fuel2 gitrepo create --env 1 --name oscnf1 --url git@github.com:dukov/oscnf.git --ref master --key .ssh/id_rsa
+```
+
+##### (Optional) When repo added to environment user may want to initialise new repository with basic settings and tools
+```
+fuel2 gitrepo init [-h] --repo REPO
+
+  --repo REPO  Repo ID to delete
+```
+For example:
+```
+fuel2 gitrepo init --repo 11
+```
+##### (Optional) User can download supprted config files from the environment and upload them to configured git repository
+```
+fuel2 gitrepo get configs [-h] [--env ENV] [--key_path KEY_PATH]
+                             [--repo_dir REPO_DIR]
+
+  --env ENV            Env ID
+  --key_path KEY_PATH  Path to nodes private key file
+  --repo_dir REPO_DIR  Directory to Git repo download
+```
+For example download configs from all environment and push them to configured repo:
+```
+fuel2 gitrepo get configs
+```
+##### Other commands
+You can update,delete and list git repo association executing corresponding command
+```
+fuel2 gitrepo <command>
+```
+To get more detailded description use:
+```
+fuel2 help <command>
+```
+#### Git Repo structure
+Here is the example repo structure
+```
+.
+|-- controller_configs
+|   `-- glance-api.conf
+|-- node_1_configs
+|   `-- nova.conf
+|-- nova.conf
+|-- overrides.yaml
+`-- tools
+    `-- show-config-for.py
+```
+There are three levels of configuration: Global, Role, Node. Each level has higher proority in trems of configuration parameters.
+* Global - configuration parameters from all configs from this level will be applied to all nodes in environment.
+* Role - configuration parameters from all configs from this level will be applied to nodes with particular role. Parameters from this level will override parameters from Global level
+* Node - configuration parameters from all configs from this level will be applied to node with particilar id. Parameters from this levelel will override parameters from Global and Role levels
+
+For example we have ```nova.conf``` file with ```debug = True``` in Global level and ```nova.conf``` with ```debug = False```  in Role level. Resulting configuration will be:
+```
+[DEFAULT]
+debug = False
+```
+Configuration files for Global level should be placed in repo root. Role and Node levels should be described in oeverrides.yaml placed in repo root directory using following format
+```
+nodes:
+  '<node_id>': '<directory_name>'
+roles:
+  '<role_name>': '<directory_name>'
+```
+Example overrides.yaml
+```
+nodes:
+  '1': node_1_configs
+  '2': node_2_configs
+roles:
+  'cinder': 'cinder_configs'
+  'compute': 'compute_configs'
+  'controller': 'controller_configs'
+  'primary-controller': 'controller_configs'
+```
+Configuration files for Role and Node levels should be placed in corresponding directory described in overrides.yaml
+
+
 ### API
 Extension supports following REST API calls
 #### GET /clusters/git-repos
@@ -31,7 +135,7 @@ Input data schema:
 ```
 "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "Cluster",
-    "description": "Serialized Cluster object",
+    "description": "Serialized GitRepo object",
     "type": "object",
     "properties": {
         "id": {"type": "number"},
@@ -47,7 +151,7 @@ Example
 curl -X POST -H "X-Auth-Token: $(fuel token)" http://localhost:8000/api/v1/clusters/git-repos -d '{"user_key": "", "git_url": "https://github.com/dukov/openstack-configs", "env_id": 5, "ref": "master", "repo_name": "osconf1"}'
 ```
 
-#### PUT /clusters/(?P<cluster_id>\d+)/git-repos/(?P<obj_id>\d+)
+#### PUT /clusters/(cluster_id)/git-repos/(obj_id)
 Updates repo with obj_id info for cluster cluster_id
 Example:
 ```
