@@ -17,7 +17,7 @@ Execute following commands on Fuel Master node
 ```
 
 ### How to Use
-This extension introduces set of additional Fuel CLI commands which help to accosiate git repo with particular environment and preform CRUD operations this repo.
+This extension introduces set of additional Fuel CLI commands which help to associate git repo with particular environment and preform CRUD operations this repo.
 ```
   gitrepo create
   gitrepo delete
@@ -54,7 +54,7 @@ For example:
 ```
 fuel2 gitrepo init --repo 11
 ```
-##### (Optional) User can download supprted config files from the environment and upload them to configured git repository
+##### (Optional) User can download supported config files from the environment and upload them to configured git repository
 ```
 fuel2 gitrepo get configs [-h] [--env ENV] [--key_path KEY_PATH]
                              [--repo_dir REPO_DIR]
@@ -72,7 +72,7 @@ You can update,delete and list git repo association executing corresponding comm
 ```
 fuel2 gitrepo <command>
 ```
-To get more detailded description use:
+To get more detailed description use:
 ```
 fuel2 help <command>
 ```
@@ -89,17 +89,17 @@ Here is the example repo structure
 `-- tools
     `-- show-config-for.py
 ```
-There are three levels of configuration: Global, Role, Node. Each level has higher proority in trems of configuration parameters.
+There are three levels of configuration: Global, Role, Node. Each level has higher priority in terms of configuration parameters.
 * Global - configuration parameters from all configs from this level will be applied to all nodes in environment.
 * Role - configuration parameters from all configs from this level will be applied to nodes with particular role. Parameters from this level will override parameters from Global level
-* Node - configuration parameters from all configs from this level will be applied to node with particilar id. Parameters from this levelel will override parameters from Global and Role levels
+* Node - configuration parameters from all configs from this level will be applied to node with particular id. Parameters from this level will override parameters from Global and Role levels
 
 For example we have ```nova.conf``` file with ```debug = True``` in Global level and ```nova.conf``` with ```debug = False```  in Role level. Resulting configuration will be:
 ```
 [DEFAULT]
 debug = False
 ```
-Configuration files for Global level should be placed in repo root. Role and Node levels should be described in oeverrides.yaml placed in repo root directory using following format
+Configuration files for Global level should be placed in repo root. Role and Node levels should be described in overrides.yaml placed in repo root directory using following format
 ```
 nodes:
   '<node_id>': '<directory_name>'
