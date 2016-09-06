@@ -1,46 +1,29 @@
-import os
+# Copyright (c) 2013 Hewlett-Packard Development Company, L.P.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-from setuptools import setup
+# THIS FILE IS MANAGED BY THE GLOBAL REQUIREMENTS REPO - DO NOT EDIT
+import setuptools
 
+# In python < 2.7.4, a lazy loading of package `pbr` will break
+# setuptools if some other modules registered functions in `atexit`.
+# solution from: http://bugs.python.org/issue15881#msg170215
+try:
+    import multiprocessing  # noqa
+except ImportError:
+    pass
 
-def package_files(directory):
-    paths = []
-    for (path, directories, filenames) in os.walk(directory):
-        for filename in filenames:
-            paths.append(os.path.join('..', path, filename))
-    return paths
-
-extra_files = package_files('fuel_external_git/migrations')
-extra_files += package_files('fuel_external_git/templates')
-extra_files.append('settings.yaml')
-
-setup(
-    name='fuel_external_git',
-    version='1.0',
-    description='Nailgun extension which uses git repo for config files',
-    author='Dmitry Ukov',
-    author_email='dukov@mirantis.com',
-    url='http://example.com',
-    classifiers=['Development Status :: 3 - Alpha',
-                 'License :: OSI Approved :: Apache Software License',
-                 'Programming Language :: Python',
-                 'Programming Language :: Python :: 2',
-                 'Environment :: Console',
-                 ],
-    packages=['fuel_external_git'],
-    package_data={'fuel_external_git': extra_files},
-    entry_points={
-        'nailgun.extensions': [
-           'fuel_external_git = fuel_external_git.extension:ExternalGit',
-        ],
-        'fuelclient': [
-            'gitrepo_list = fuel_external_git.fuelclient:GitRepoList',
-            'gitrepo_create = fuel_external_git.fuelclient:AddRepo',
-            'gitrepo_delete = fuel_external_git.fuelclient:DeleteRepo',
-            'gitrepo_update = fuel_external_git.fuelclient:UpdateRepo',
-            'gitrepo_init = fuel_external_git.fuelclient:InitRepo',
-            'gitrepo_get_configs = fuel_external_git.fuelclient:DownloadConfgs',
-        ]
-        },
-    zip_safe=False,
-)
+setuptools.setup(
+    setup_requires=['pbr'],
+    pbr=True)
