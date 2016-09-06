@@ -1,5 +1,8 @@
 import os
 
+from nailgun.db import db
+from nailgun.db.sqlalchemy.models import Cluster
+from nailgun.db.sqlalchemy.models import Release
 from nailgun.logger import logger
 from fuel_external_git.openstack_config import OpenStackConfig
 
@@ -33,3 +36,24 @@ def deep_merge(dct, merge_dct):
             deep_merge(dct[k], merge_dct[k])
         else:
             dct[k] = merge_dct[k]
+
+
+# TODO (dukov) Remove this ugly staff once extension management is available
+def register_extension(ext_name):
+    def decorator(cls):
+        exts = {cl: cl['extensions'] for cl in
+                list(db().query(Cluster).all()) +
+                list(db().query(Release).all())}
+        save = False
+        for obj, extensions in exts.items():
+            if u'fuel_external_git' not in extensions:
+                extensions.append(u'fuel_external_git')
+                extensions = list(set(extensions))
+                obj.extensions = extensions
+                save = True
+                db().flush()
+
+        if save:
+            db().commit()
+        return cls
+    return decorator

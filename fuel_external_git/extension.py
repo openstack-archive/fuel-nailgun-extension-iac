@@ -91,7 +91,8 @@ class OpenStackConfigPipeline(BasePipeline):
             logger.info("Node {0} config from git {1}".format(uid, common))
         return data
 
-
+# TODO (dukov) Remove decorator extension management is available
+@utils.register_extension(u'fuel_external_git')
 class ExternalGit(BaseExtension):
     name = 'fuel_external_git'
     version = '1.0.0'
