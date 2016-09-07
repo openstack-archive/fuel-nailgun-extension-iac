@@ -1,9 +1,11 @@
 import os
+from oslo_utils import importutils
 
 from nailgun.db import db
 from nailgun.db.sqlalchemy.models import Cluster
 from nailgun.db.sqlalchemy.models import Release
 from nailgun.logger import logger
+
 from fuel_external_git.openstack_config import OpenStackConfig
 
 
@@ -24,8 +26,15 @@ def get_config_hash(file_dir, resource_mapping, exts=['conf']):
     conf_files = [conf for conf in os.listdir(file_dir)
                   if conf.split('.')[-1] in exts]
     for conf_file in conf_files:
-        config = OpenStackConfig(os.path.join(file_dir, conf_file),
-                                 resource_mapping)
+        resource_name = None
+        driver_str = 'fuel_external_git.openstack_config.OpenStackConfig' 
+        for resource, params in resource_mapping.items():
+            if params['alias'] == conf_file:
+                resource_name = resource
+                driver_str = params.get('driver', driver_str)
+                break
+        drv_class = importutils.import_class(driver_str)
+        config = drv_class(os.path.join(file_dir, conf_file), resource_name)
         res[config.config_name] = config.to_config_dict()
     return res
 
