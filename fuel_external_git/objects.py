@@ -1,19 +1,33 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 import os
 import shutil
 import yaml
 from distutils.dir_util import copy_tree
 
-from nailgun.db import db
-from nailgun.objects import NailgunObject, NailgunCollection, Cluster
-from nailgun.objects.serializers.base import BasicSerializer
-from nailgun.logger import logger
-from nailgun.errors import errors
-
-from git import Repo
-from git import exc
-
 from fuel_external_git.models import GitRepo
 from fuel_external_git import const
+
+from git import exc
+from git import Repo
+
+from nailgun.db import db
+from nailgun.errors import errors
+from nailgun.logger import logger
+from nailgun.objects import Cluster
+from nailgun.objects import NailgunCollection
+from nailgun.objects import NailgunObject
+from nailgun.objects.serializers.base import BasicSerializer
 
 
 class GitRepoSerializer(BasicSerializer):
@@ -34,8 +48,7 @@ class GitRepo(NailgunObject):
     @classmethod
     def get_by_cluster_id(self, cluster_id):
         instance = db().query(self.model).\
-                              filter(self.model.env_id == cluster_id).\
-                              first()
+            filter(self.model.env_id == cluster_id).first()
         if instance is not None:
             try:
                 instance.repo = Repo(os.path.join(const.REPOS_DIR,
@@ -92,8 +105,8 @@ class GitRepo(NailgunObject):
     @classmethod
     def init(self, instance):
         overrides = {
-                'nodes': {},
-                'roles': {}
+            'nodes': {},
+            'roles': {}
         }
         repo_path = os.path.join(const.REPOS_DIR, instance.repo_name)
         templates_dir = os.path.join(os.path.dirname(__file__),
@@ -102,7 +115,7 @@ class GitRepo(NailgunObject):
 
         try:
             self.checkout(instance)
-        except exc.GitCommandError, e:
+        except exc.GitCommandError as e:
             logger.debug(("Remote returned following error {}. "
                           "Seem remote has not been initialised. "
                           "Skipping checkout".format(e)))
@@ -129,7 +142,7 @@ class GitRepo(NailgunObject):
             with instance.repo.git.custom_environment(
                     GIT_SSH_COMMAND=ssh_cmd):
                 res = instance.repo.remotes.origin.push(
-                        refspec='HEAD:' + instance.ref)
+                    refspec='HEAD:' + instance.ref)
                 logger.debug("Push result {}".format(res[0].flags))
                 if res[0].flags not in (2, 256):
                     logger.debug("Push error. Result code should be 2 or 256")
