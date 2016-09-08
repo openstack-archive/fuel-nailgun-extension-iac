@@ -1,10 +1,23 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 from __future__ import absolute_import
 
-import os
 import fabric.api
-from git import Repo
+import os
+
 from cliff import command
 from cliff import lister
+from git import Repo
 
 from fuelclient.client import APIClient
 from fuelclient.common import data_utils
@@ -88,7 +101,7 @@ class AddRepo(command.Command):
             with open(parsed_args.key) as key_file:
                 data['user_key'] = key_file.read()
 
-        result = APIClient.post_request('/clusters/git-repos/', data)
+        APIClient.post_request('/clusters/git-repos/', data)
         return (self.columns, data)
 
 
@@ -120,7 +133,7 @@ class DeleteRepo(command.Command):
                    if repo['id'] == parsed_args.repo][0]
 
         del_path = "/clusters/{0}/git-repos/{1}"
-        result = APIClient.delete_request(del_path.format(env, repo_id))
+        APIClient.delete_request(del_path.format(env, repo_id))
         return (self.columns, {})
 
 
@@ -208,7 +221,7 @@ class InitRepo(command.Command):
                if repo['id'] == parsed_args.repo][0]
 
         init_path = "/clusters/{0}/git-repos/{1}/init"
-        result = APIClient.put_request(init_path.format(env, repo_id), {})
+        APIClient.put_request(init_path.format(env, repo_id), {})
         return (self.columns, {})
 
 
@@ -250,8 +263,8 @@ class DownloadConfgs(command.Command):
 
         for repo in repos:
             key_path = os.path.join(
-                    parsed_args.repo_dir,
-                    repo['repo_name'] + '.key')
+                parsed_args.repo_dir,
+                repo['repo_name'] + '.key')
             with open(key_path, 'w') as keyf:
                 keyf.write(repo['user_key'])
             os.chmod(key_path, 0o600)
@@ -283,10 +296,10 @@ class DownloadConfgs(command.Command):
                 for params in ext_settings['resource_mapping'].values():
                     path = params['path']
                     target_path = os.path.join(
-                                      repo_path,
-                                      "node_{}_configs".format(node['id']),
-                                      os.path.basename(path)
-                                  )
+                        repo_path,
+                        "node_{}_configs".format(node['id']),
+                        os.path.basename(path)
+                    )
                     with fabric.api.settings(
                         host_string=node['ip'],
                         key_filename=key,
@@ -305,6 +318,6 @@ class DownloadConfgs(command.Command):
                 gitrepo.git.commit('-m "Configs updated"')
                 with gitrepo.git.custom_environment(GIT_SSH_COMMAND=ssh_cmd):
                     push_result = gitrepo.remotes.origin.\
-                            push(refspec='HEAD:' + cfg_branch)
+                        push(refspec='HEAD:' + cfg_branch)
                     print("Push result {}".format(push_result))
         return ((), {})

@@ -1,24 +1,37 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+import copy
 import os
 import yaml
-import copy
 
-from nailgun.logger import logger
-
-from nailgun.extensions import BaseExtension
-from nailgun.extensions import BasePipeline
-
+from fuel_external_git import const
 from fuel_external_git import handlers
 from fuel_external_git.objects import GitRepo
 from fuel_external_git.settings import GitExtensionSettings
-from fuel_external_git import const
 from fuel_external_git import utils
+
+from nailgun.extensions import BaseExtension
+from nailgun.extensions import BasePipeline
+from nailgun.logger import logger
 
 
 class OpenStackConfigPipeline(BasePipeline):
-    # TODO (dukov) add cluster remove callback
+    # TODO(dukov) add cluster remove callback
     @classmethod
     def process_deployment(cls, data, cluster, nodes, **kwargs):
-        """Genereate OpenStack configuration hash based on configuration files
+        """Updating deployment info
+
+           Genereate OpenStack configuration hash based on configuration files
            stored in git repository associated with a particular environment
            Example of configuration extension:
                configuration:
@@ -91,7 +104,8 @@ class OpenStackConfigPipeline(BasePipeline):
             logger.info("Node {0} config from git {1}".format(uid, common))
         return data
 
-# TODO (dukov) Remove decorator extension management is available
+
+# TODO(dukov) Remove decorator extension management is available
 @utils.register_extension(u'fuel_external_git')
 class ExternalGit(BaseExtension):
     name = 'fuel_external_git'
