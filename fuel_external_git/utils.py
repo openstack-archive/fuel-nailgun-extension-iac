@@ -1,3 +1,15 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 import os
 from oslo_utils import importutils
 
@@ -5,8 +17,6 @@ from nailgun.db import db
 from nailgun.db.sqlalchemy.models import Cluster
 from nailgun.db.sqlalchemy.models import Release
 from nailgun.logger import logger
-
-from fuel_external_git.openstack_config import OpenStackConfig
 
 
 def get_file_exts_list(resource_mapping):
@@ -27,7 +37,7 @@ def get_config_hash(file_dir, resource_mapping, exts=['conf']):
                   if conf.split('.')[-1] in exts]
     for conf_file in conf_files:
         resource_name = None
-        driver_str = 'fuel_external_git.openstack_config.OpenStackConfig' 
+        driver_str = 'fuel_external_git.openstack_config.OpenStackConfig'
         for resource, params in resource_mapping.items():
             if params['alias'] == conf_file:
                 resource_name = resource
@@ -47,7 +57,7 @@ def deep_merge(dct, merge_dct):
             dct[k] = merge_dct[k]
 
 
-# TODO (dukov) Remove this ugly staff once extension management is available
+# TODO(dukov) Remove this ugly staff once extension management is available
 def register_extension(ext_name):
     def decorator(cls):
         exts = {cl: cl['extensions'] for cl in

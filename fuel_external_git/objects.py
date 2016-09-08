@@ -1,19 +1,33 @@
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
 import os
 import shutil
 import yaml
 from distutils.dir_util import copy_tree
 
-from nailgun.db import db
-from nailgun.objects import NailgunObject, NailgunCollection, Cluster
-from nailgun.objects.serializers.base import BasicSerializer
-from nailgun.logger import logger
-from nailgun.errors import errors
-
-from git import Repo
-from git import exc
-
 from fuel_external_git.models import GitRepo
 from fuel_external_git import const
+
+from git import exc
+from git import Repo
+
+from nailgun.db import db
+from nailgun.errors import errors
+from nailgun.logger import logger
+from nailgun.objects import Cluster
+from nailgun.objects import NailgunCollection
+from nailgun.objects import NailgunObject
+from nailgun.objects.serializers.base import BasicSerializer
 
 
 class GitRepoSerializer(BasicSerializer):
