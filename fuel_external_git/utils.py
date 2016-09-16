@@ -18,6 +18,7 @@ from nailgun.db.sqlalchemy.models import Cluster
 from nailgun.db.sqlalchemy.models import Release
 from nailgun.logger import logger
 
+from fuel_external_git import const
 
 def get_file_exts_list(resource_mapping):
     res = set()
@@ -55,6 +56,25 @@ def deep_merge(dct, merge_dct):
             deep_merge(dct[k], merge_dct[k])
         else:
             dct[k] = merge_dct[k]
+
+
+def update_graph_with_enc(tasks, reponame, modulepath=[], script=None):
+    fulpath_modules = map(lambda x: os.path.join(const.REPOS_DIR, reponame, x), modulepath)
+    fulpath_modules = set(fulpath_modules)
+    for task in tasks:
+        if task.get('type', None) == 'puppet':
+            logger.debug("DDD before task%s"%task)
+            pm = set(task['parameters']['puppet_modules'].split(':'))
+            task['parameters']['puppet_modules'] = ':'.join(pm.union(fulpath_modules))
+            if script:
+                fullpath_script = os.path.join(const.REPOS_DIR, reponame, script)
+                manifest = task['parameters']['puppet_manifest']
+                params = ['--node_terminus=exec',
+                          "--external_nodes={}".format(fullpath_script)]
+                params.append(manifest)
+                task['parameters']['puppet_manifest'] = ' '.join(params)
+            logger.debug("DDD after task%s"%task)
+
 
 
 # TODO(dukov) Remove this ugly staff once extension management is available

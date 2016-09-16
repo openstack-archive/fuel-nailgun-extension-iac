@@ -23,6 +23,7 @@ from fuel_external_git import utils
 from nailgun.extensions import BaseExtension
 from nailgun.extensions import BasePipeline
 from nailgun.logger import logger
+from nailgun.objects import Cluster
 
 
 class OpenStackConfigPipeline(BasePipeline):
@@ -75,6 +76,8 @@ class OpenStackConfigPipeline(BasePipeline):
         override_configs = {}
         # ent = roles|nodes
         for ent, override in overrides.items():
+            if ent == 'enc':
+                continue
             override_configs[ent] = {}
             # key = role_name|node_id
             for key, path in override.items():
@@ -103,6 +106,27 @@ class OpenStackConfigPipeline(BasePipeline):
             node_config['configuration'] = common
             logger.info("Node {0} config from git {1}".format(uid, common))
         return data
+
+    @classmethod
+    def process_tasks(cls, tasks, cluster, **kwargs):
+        repo = GitRepo.get_by_cluster_id(cluster.id)
+        GitRepo.checkout(repo)
+        repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
+        overrides_file = os.path.join(repo_path, 'overrides.yaml')
+        if os.path.exists(overrides_file):
+            overrides = yaml.load(open(overrides_file))
+        else:
+            overrides = {'roles': {}, 'nodes': {}}
+
+        if 'enc' in overrides.keys():
+            override = overrides['enc']
+            utils.update_graph_with_enc(tasks,
+                repo.repo_name,
+                modulepath=override['modulepath'],
+                script=override['script'])
+            logger.debug("DDD tasks%s"%tasks)
+        return tasks
+
 
 
 # TODO(dukov) Remove decorator extension management is available
