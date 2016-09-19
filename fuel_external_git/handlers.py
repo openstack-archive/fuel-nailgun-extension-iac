@@ -16,10 +16,12 @@ from fuel_external_git.objects import GitRepoCollection
 
 from nailgun.api.v1.handlers.base import BaseHandler
 from nailgun.api.v1.handlers.base import CollectionHandler
-from nailgun.api.v1.handlers.base import content
+from nailgun.api.v1.handlers.base import handle_errors
+from nailgun.api.v1.handlers.base import serialize
 from nailgun.api.v1.handlers.base import SingleHandler
+from nailgun.api.v1.handlers.base import validate
 from nailgun.api.v1.validators import base
-from nailgun.errors import errors
+from nailgun import errors
 from nailgun import objects
 
 REPOS_DIR = '/var/lib/fuel_repos'
@@ -63,6 +65,9 @@ class GitRepoHandler(SingleHandler):
     single = GitRepo
     validator = GitRepoValidator
 
+    @handle_errors
+    @validate
+    @serialize
     def GET(self, cluster_id, obj_id):
         """:returns: JSONized REST object.
 
@@ -74,7 +79,9 @@ class GitRepoHandler(SingleHandler):
         obj = self.get_object_or_404(self.single, obj_id)
         return self.single.to_json(obj)
 
-    @content
+    @handle_errors
+    @validate
+    @serialize
     def PUT(self, cluster_id, obj_id):
         """:returns: JSONized REST object.
 
@@ -100,7 +107,8 @@ class GitRepoHandler(SingleHandler):
         """
         return self.PUT(cluster_id, obj_id)
 
-    @content
+    @handle_errors
+    @serialize
     def DELETE(self, cluster_id, obj_id):
         """:returns: JSONized REST object.
 
@@ -114,7 +122,9 @@ class GitRepoHandler(SingleHandler):
 
 class GitRepoInit(BaseHandler):
 
-    @content
+    @handle_errors
+    @validate
+    @serialize
     def PUT(self, env_id, obj_id):
         """:returns: JSONized REST object.
 

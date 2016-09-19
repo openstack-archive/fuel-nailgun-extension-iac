@@ -23,7 +23,7 @@ from git import exc
 from git import Repo
 
 from nailgun.db import db
-from nailgun.errors import errors
+from nailgun import errors
 from nailgun.logger import logger
 from nailgun.objects import Cluster
 from nailgun.objects import NailgunCollection
@@ -57,7 +57,7 @@ class GitRepo(NailgunObject):
             except exc.NoSuchPathError:
                 logger.debug("Repo folder does not exist. Cloning repo")
                 self._create_key_file(instance.repo_name, instance.user_key)
-                os.environ['GIT_SSH_COMMAND'] = \
+                os.environ['GIT_SSH'] = \
                     self._get_ssh_cmd(instance.repo_name)
 
                 repo_path = os.path.join(const.REPOS_DIR, instance.repo_name)
@@ -75,7 +75,7 @@ class GitRepo(NailgunObject):
             shutil.rmtree(repo_path)
 
         self._create_key_file(data['repo_name'], data['user_key'])
-        os.environ['GIT_SSH_COMMAND'] = self._get_ssh_cmd(data['repo_name'])
+        os.environ['GIT_SSH'] = self._get_ssh_cmd(data['repo_name'])
         repo = Repo.clone_from(data['git_url'], repo_path)
 
         instance = super(GitRepo, self).create(data)
@@ -97,7 +97,7 @@ class GitRepo(NailgunObject):
             logger.debug('Key file does not exist. Creating...')
             self._create_key_file(instance.repo_name)
 
-        with instance.repo.git.custom_environment(GIT_SSH_COMMAND=ssh_cmd):
+        with instance.repo.git.custom_environment(GIT_SSH=ssh_cmd):
             commit = instance.repo.remotes.origin.fetch(refspec=instance.ref)
             commit = commit[0].commit
             instance.repo.head.reference = commit
@@ -141,7 +141,7 @@ class GitRepo(NailgunObject):
 
             ssh_cmd = self._get_ssh_cmd(instance.repo_name)
             with instance.repo.git.custom_environment(
-                    GIT_SSH_COMMAND=ssh_cmd):
+                    GIT_SSH=ssh_cmd):
                 res = instance.repo.remotes.origin.push(
                     refspec='HEAD:' + instance.ref)
                 logger.debug("Push result {}".format(res[0].flags))
@@ -166,7 +166,17 @@ class GitRepo(NailgunObject):
     @classmethod
     def _get_ssh_cmd(self, repo_name):
         key_path = self._get_key_path(repo_name)
-        return 'ssh -o StrictHostKeyChecking=no -i ' + key_path
+        git_ssh_file = os.path.join(const.REPOS_DIR, repo_name + '.sh')
+        with open(git_ssh_file, 'w') as ssh_wrap:
+            ssh_wrap.write("#!/bin/bash\n")
+            ssh_wrap.write((
+                "exec /usr/bin/ssh "
+                "-o UserKnownHostsFile=/dev/null "
+                "-o StrictHostKeyChecking=no "
+                "-i {0} \"$@\"".format(key_path)
+            ))
+        os.chmod(git_ssh_file, 0o755)
+        return git_ssh_file
 
 
 class GitRepoCollection(NailgunCollection):

@@ -28,7 +28,7 @@ from nailgun.logger import logger
 class OpenStackConfigPipeline(BasePipeline):
     # TODO(dukov) add cluster remove callback
     @classmethod
-    def process_deployment(cls, data, cluster, nodes, **kwargs):
+    def process_deployment_for_node(cls, node, node_data):
         """Updating deployment info
 
            Genereate OpenStack configuration hash based on configuration files
@@ -46,9 +46,9 @@ class OpenStackConfigPipeline(BasePipeline):
                    DEFAULT/crypt_strength:
                      value: 6000
         """
-        repo = GitRepo.get_by_cluster_id(cluster.id)
+        repo = GitRepo.get_by_cluster_id(node.cluster_id)
         if not repo:
-            return data
+            return node_data
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
         resource_mapping = ExternalGit.ext_settings['resource_mapping']
@@ -86,23 +86,22 @@ class OpenStackConfigPipeline(BasePipeline):
 
         logger.debug("Override configs {}".format(override_configs))
 
-        for node_config in data:
-            common = copy.deepcopy(global_config)
-            roles = node_config['roles']
-            uid = node_config['uid']
-            logger.debug("Node {0} roles {1}".format(uid, roles))
-            for role in roles:
-                utils.deep_merge(common,
-                                 override_configs['roles'].get(role, {}))
-
-            logger.debug("Config Node {0} with roles {1}".format(uid, common))
-
+        common = copy.deepcopy(global_config)
+        roles = node_data['roles']
+        uid = node_data['uid']
+        logger.debug("Node {0} roles {1}".format(uid, roles))
+        for role in roles:
             utils.deep_merge(common,
-                             override_configs['nodes'].get(uid, {}))
+                             override_configs['roles'].get(role, {}))
 
-            node_config['configuration'] = common
-            logger.info("Node {0} config from git {1}".format(uid, common))
-        return data
+        logger.debug("Config Node {0} with roles {1}".format(uid, common))
+
+        utils.deep_merge(common,
+                         override_configs['nodes'].get(uid, {}))
+
+        node_data['configuration'] = common
+        logger.info("Node {0} config from git {1}".format(uid, common))
+        return node_data
 
 
 # TODO(dukov) Remove decorator extension management is available
