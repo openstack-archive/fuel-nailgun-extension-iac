@@ -210,7 +210,7 @@ class InitRepo(command.Command):
         parser = super(InitRepo, self).get_parser(prog_name)
         parser.add_argument('--repo',
                             type=int,
-                            help='Repo ID to delete',
+                            help='Repo ID to init',
                             required=True)
         return parser
 
