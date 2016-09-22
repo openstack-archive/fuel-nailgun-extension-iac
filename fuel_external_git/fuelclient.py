@@ -19,7 +19,13 @@ from cliff import command
 from cliff import lister
 from git import Repo
 
-from fuelclient.client import APIClient
+from fuelclient import client
+if hasattr(client, 'DefaultAPIClient'):
+    # Handling python-fuelclient version >= 10.0
+    fc_client = client.DefaultAPIClient
+else:
+    # Handling python-fuelclient version <= 9.0
+    fc_client = client.APIClient
 from fuelclient.common import data_utils
 
 from fuel_external_git.settings import GitExtensionSettings
@@ -40,7 +46,7 @@ class GitRepoList(lister.Lister, command.Command):
         return parser
 
     def take_action(self, parsed_args):
-        data = APIClient.get_request('/clusters/git-repos/')
+        data = fc_client.get_request('/clusters/git-repos/')
         if parsed_args.env:
             data = [entry for entry in data
                     if entry['env_id'] == parsed_args.env]
@@ -101,7 +107,7 @@ class AddRepo(command.Command):
             with open(parsed_args.key) as key_file:
                 data['user_key'] = key_file.read()
 
-        APIClient.post_request('/clusters/git-repos/', data)
+        fc_client.post_request('/clusters/git-repos/', data)
         return (self.columns, data)
 
 
@@ -128,12 +134,12 @@ class DeleteRepo(command.Command):
         if parsed_args.env:
             env = parsed_args.env
         else:
-            repos = APIClient.get_request('/clusters/git-repos/')
+            repos = fc_client.get_request('/clusters/git-repos/')
             env = [repo['env_id'] for repo in repos
                    if repo['id'] == parsed_args.repo][0]
 
         del_path = "/clusters/{0}/git-repos/{1}"
-        APIClient.delete_request(del_path.format(env, repo_id))
+        fc_client.delete_request(del_path.format(env, repo_id))
         return (self.columns, {})
 
 
@@ -188,7 +194,7 @@ class UpdateRepo(command.Command):
         for param, value in parsed_args.__dict__.items():
             if value and param in param_mapping.keys():
                 data[param_mapping[param]] = value
-        repos = APIClient.get_request('/clusters/git-repos/')
+        repos = fc_client.get_request('/clusters/git-repos/')
         env = [repo['env_id'] for repo in repos
                if repo['id'] == parsed_args.repo][0]
         path = "/clusters/{0}/git-repos/{1}"
@@ -197,7 +203,7 @@ class UpdateRepo(command.Command):
             with open(parsed_args.key) as key_file:
                 data['user_key'] = key_file.read()
 
-        APIClient.put_request(path.format(env, parsed_args.repo), data)
+        fc_client.put_request(path.format(env, parsed_args.repo), data)
         return (self.columns, data)
 
 
@@ -216,12 +222,12 @@ class InitRepo(command.Command):
 
     def take_action(self, parsed_args):
         repo_id = parsed_args.repo
-        repos = APIClient.get_request('/clusters/git-repos/')
+        repos = fc_client.get_request('/clusters/git-repos/')
         env = [repo['env_id'] for repo in repos
                if repo['id'] == parsed_args.repo][0]
 
         init_path = "/clusters/{0}/git-repos/{1}/init"
-        APIClient.put_request(init_path.format(env, repo_id), {})
+        fc_client.put_request(init_path.format(env, repo_id), {})
         return (self.columns, {})
 
 
@@ -252,8 +258,8 @@ class DownloadConfgs(command.Command):
             from nailgun.settings import settings
             key = settings.SHOTGUN_SSH_KEY
 
-        nodes = APIClient.get_request('nodes/')
-        repos = APIClient.get_request('/clusters/git-repos/')
+        nodes = fc_client.get_request('nodes/')
+        repos = fc_client.get_request('/clusters/git-repos/')
         if parsed_args.env:
             repos = [repo for repo in repos
                      if repo['env_id'] == parsed_args.env]
