@@ -8,12 +8,12 @@ Deployed Fuel 9.0 (Mitaka) Master Node
 Execute following commands on Fuel Master node
 ```
 # yum install git python-pip
-# git clone https://github.com/dukov/fuel-external-git
-# cd fuel-external-git
+# git clone https://github.com/openstack/fuel-nailgun-extension-iac
+# cd fuel-nailgun-extension-iac
 # pip install -r requirements.txt
 # python setup.py install
 # nailgun_syncdb
-# service nailgun reload
+# systemctl restart nailgun.service
 ```
 
 ### How to Use
@@ -48,7 +48,7 @@ fuel2 gitrepo create --env 1 --name oscnf1 --url git@github.com:dukov/oscnf.git 
 ```
 fuel2 gitrepo init [-h] --repo REPO
 
-  --repo REPO  Repo ID to delete
+  --repo REPO  Repo ID to init
 ```
 For example:
 ```
