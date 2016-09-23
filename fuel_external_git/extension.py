@@ -52,12 +52,12 @@ class OpenStackConfigPipeline(BasePipeline):
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
         resource_mapping = ExternalGit.ext_settings['resource_mapping']
+        resource_mapping.pop('master_config', {})
         exts_list = utils.get_file_exts_list(resource_mapping)
 
         global_config = utils.get_config_hash(repo_path,
                                               resource_mapping,
                                               exts=exts_list)
-
         # Read config for overrides
         # Overrides file should contain following mapping
         #  - role:config_file_dir
@@ -102,6 +102,24 @@ class OpenStackConfigPipeline(BasePipeline):
         node_data['configuration'] = common
         logger.info("Node {0} config from git {1}".format(uid, common))
         return node_data
+
+    @classmethod
+    def process_deployment_for_cluster(self, cluster, data):
+        repo = GitRepo.get_by_cluster_id(cluster.id)
+        if not repo:
+            return data
+        GitRepo.checkout(repo)
+        repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
+        resource_mapping = ExternalGit.ext_settings['resource_mapping']
+        master_config_mapping = resource_mapping.pop('master_config', {})
+        master_config = utils.get_config_hash(
+            repo_path,
+            {'master_config': master_config_mapping},
+            exts=['yaml']
+        )
+
+        data['master_config'] = master_config
+        return data
 
 
 # TODO(dukov) Remove decorator extension management is available

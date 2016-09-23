@@ -62,3 +62,7 @@ resource_mapping:
   nova_paste_api_ini:
     alias: nova-api-paste.ini
     path: /etc/nova/api-paste.ini
+  master_config:
+    alias: master_config.yaml
+    path: ""
+    driver: 'fuel_external_git.drivers.yaml_driver.YamlConfig'
