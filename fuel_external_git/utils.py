@@ -33,19 +33,25 @@ def get_config_hash(file_dir, resource_mapping, exts=['conf']):
             "Directory {} not found. Returning emty dict".format(file_dir))
         return {}
 
+    cfg2drv = {}
+    for resource, params in resource_mapping.items():
+        drv = params.get(
+            'driver',
+            'fuel_external_git.drivers.openstack_config.OpenStackConfig'
+        )
+        cfg2drv[params['alias']] = {'drv': drv, 'resource': resource}
+
     conf_files = [conf for conf in os.listdir(file_dir)
                   if conf.split('.')[-1] in exts]
+
     for conf_file in conf_files:
-        resource_name = None
-        driver_str = 'fuel_external_git.openstack_config.OpenStackConfig'
-        for resource, params in resource_mapping.items():
-            if params['alias'] == conf_file:
-                resource_name = resource
-                driver_str = params.get('driver', driver_str)
-                break
-        drv_class = importutils.import_class(driver_str)
-        config = drv_class(os.path.join(file_dir, conf_file), resource_name)
-        res[config.config_name] = config.to_config_dict()
+        if conf_file in cfg2drv.keys():
+            drv_class = importutils.import_class(cfg2drv[conf_file]['drv'])
+            config = drv_class(
+                os.path.join(file_dir, conf_file),
+                cfg2drv[conf_file]['resource']
+            )
+            res[config.config_name] = config.to_config_dict()
     return res
 
 

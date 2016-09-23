@@ -12,7 +12,7 @@
 
 import os
 
-from fuel_external_git.openstack_config import OpenStackConfig
+from fuel_external_git.drivers.openstack_config import OpenStackConfig
 from fuel_external_git.tests import base
 
 
