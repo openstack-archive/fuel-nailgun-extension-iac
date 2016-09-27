@@ -33,22 +33,12 @@ class OpenStackConfigPipeline(BasePipeline):
 
            Genereate OpenStack configuration hash based on configuration files
            stored in git repository associated with a particular environment
-           Example of configuration extension:
-               configuration:
-                 nova_config:
-                   DEFAULT/debug:
-                     value: True
-                   DEFAULT/amqp_durable_queues:
-                     value: False
-                 keystone_config:
-                   DEFAULT/default_publisher_id:
-                     ensure: absent
-                   DEFAULT/crypt_strength:
-                     value: 6000
         """
+        logger.info("Started serialisation for node {}".format(node.id))
         repo = GitRepo.get_by_cluster_id(node.cluster_id)
         if not repo:
             return node_data
+
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
         resource_mapping = ExternalGit.ext_settings['resource_mapping']
@@ -99,14 +89,17 @@ class OpenStackConfigPipeline(BasePipeline):
                          override_configs['nodes'].get(uid, {}))
 
         node_data['configuration'] = common
-        logger.info("Node {0} config from git {1}".format(uid, common))
+        logger.debug("Node {0} config from git {1}".format(uid, common))
+        logger.info("Finished serialisation for node {}".format(node.id))
         return node_data
 
     @classmethod
     def process_deployment_for_cluster(self, cluster, data):
+        logger.info("Started serialisation for cluster {}".format(cluster.id))
         repo = GitRepo.get_by_cluster_id(cluster.id)
         if not repo:
             return data
+
         if repo.manage_master:
             GitRepo.checkout(repo)
             repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
@@ -118,11 +111,11 @@ class OpenStackConfigPipeline(BasePipeline):
             )
 
             data['master_config'] = master_config
+
+        logger.info("Finished serialisation for cluster {}".format(cluster.id))
         return data
 
 
-# TODO(dukov) Remove decorator extension management is available
-@utils.register_extension(u'fuel_external_git')
 class ExternalGit(BaseExtension):
     name = 'fuel_external_git'
     version = '1.0.0'

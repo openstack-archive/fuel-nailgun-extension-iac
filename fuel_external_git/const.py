@@ -11,3 +11,4 @@
 # under the License.
 
 REPOS_DIR = '/var/lib/fuel_repos'
+REPO_TTL = 1200
