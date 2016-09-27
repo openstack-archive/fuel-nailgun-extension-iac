@@ -12,8 +12,8 @@
 
 single_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
-    "title": "Cluster",
-    "description": "Serialized Cluster object",
+    "title": "GitRepo",
+    "description": "Serialized GitRepo object",
     "type": "object",
     "properties": {
         "id": {"type": "number"},
