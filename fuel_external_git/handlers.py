@@ -24,6 +24,7 @@ from nailgun.api.v1.validators import base
 from nailgun import errors
 from nailgun import objects
 
+
 REPOS_DIR = '/var/lib/fuel_repos'
 
 
@@ -37,8 +38,28 @@ class GitRepoValidator(base.BasicValidator):
     )
 
     @classmethod
-    def validate_update(self, data, instance):
+    def _validate_master_mgmt(self, data, instance=None):
         d = self.validate_json(data)
+        if instance:
+            repo_id = instance.id
+        else:
+            repo_id = d.get('id', None)
+        if d.get('manage_master', False):
+            for repo in GitRepoCollection.all():
+                if repo.manage_master and repo_id != repo.id:
+                    raise errors.InvalidData(
+                        ("Repo {} already marked for Fuel Master management. "
+                         "Disable it first".format(repo.id)),
+                        log_message=True)
+        return d
+
+    @classmethod
+    def validate(self, data):
+        return self._validate_master_mgmt(data)
+
+    @classmethod
+    def validate_update(self, data, instance):
+        d = self._validate_master_mgmt(data, instance)
         env_id = d.get('env_id')
         if env_id:
             cluster = objects.Cluster.get_by_uid(env_id)

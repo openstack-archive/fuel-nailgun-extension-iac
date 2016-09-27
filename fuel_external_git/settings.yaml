@@ -62,6 +62,7 @@ resource_mapping:
   nova_paste_api_ini:
     alias: nova-api-paste.ini
     path: /etc/nova/api-paste.ini
+master_mapping:
   master_config:
     alias: master_config.yaml
     path: ""

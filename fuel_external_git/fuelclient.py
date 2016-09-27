@@ -31,7 +31,8 @@ class GitRepoList(lister.Lister, command.Command):
         'repo_name',
         'env_id',
         'git_url',
-        'ref'
+        'ref',
+        'manage_master',
     )
 
     def get_parser(self, prog_name):
@@ -54,11 +55,13 @@ class AddRepo(command.Command):
         'repo_name',
         'env_id',
         'git_url',
-        'ref'
+        'ref',
+        'manage_master',
     )
 
     def get_parser(self, prog_name):
         parser = super(AddRepo, self).get_parser(prog_name)
+        mm = parser.add_mutually_exclusive_group(required=False)
         parser.add_argument('--env',
                             type=int,
                             help='ID of environment to configure.',
@@ -87,6 +90,19 @@ class AddRepo(command.Command):
                             type=str,
                             help='Path to private key file for accessing repo',
                             required=False)
+
+        mm.add_argument('--manage-master',
+                        dest='manage_master',
+                        help='Enable Fuel master management from this repo',
+                        action='store_true',
+                        required=False)
+
+        mm.add_argument('--no-manage-master',
+                        dest='manage_master',
+                        help='Disable Fuel master management from this repo',
+                        action='store_false',
+                        required=False)
+        parser.set_defaults(manage_master=False)
         return parser
 
     def take_action(self, parsed_args):
@@ -95,6 +111,7 @@ class AddRepo(command.Command):
             'env_id': parsed_args.env,
             'git_url': parsed_args.url,
             'ref': parsed_args.ref,
+            'manage_master': parsed_args.manage_master,
         }
 
         if parsed_args.key:
@@ -142,11 +159,13 @@ class UpdateRepo(command.Command):
         'id',
         'repo_name',
         'git_url',
-        'ref'
+        'ref',
+        'manage_master',
     )
 
     def get_parser(self, prog_name):
         parser = super(UpdateRepo, self).get_parser(prog_name)
+        mm = parser.add_mutually_exclusive_group(required=False)
         parser.add_argument('--repo',
                             type=int,
                             help='Repo ID to update',
@@ -175,6 +194,19 @@ class UpdateRepo(command.Command):
                             type=str,
                             help='Path to private key file for accessing repo',
                             required=False)
+
+        mm.add_argument('--manage-master',
+                        dest='manage_master',
+                        help='Enable Fuel master management from this repo',
+                        action='store_true',
+                        required=False)
+
+        mm.add_argument('--no-manage-master',
+                        dest='manage_master',
+                        help='Disable Fuel master management from this repo',
+                        action='store_false',
+                        required=False)
+        parser.set_defaults(manage_master=False)
         return parser
 
     def take_action(self, parsed_args):
@@ -182,11 +214,12 @@ class UpdateRepo(command.Command):
             'name': 'repo_name',
             'url': 'git_url',
             'ref': 'ref',
+            'manage_master': 'manage_master',
         }
 
         data = {}
         for param, value in parsed_args.__dict__.items():
-            if value and param in param_mapping.keys():
+            if value is not None and param in param_mapping.keys():
                 data[param_mapping[param]] = value
         repos = APIClient.get_request('/clusters/git-repos/')
         env = [repo['env_id'] for repo in repos

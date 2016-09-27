@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+from sqlalchemy import Boolean
 from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import String
@@ -28,3 +29,4 @@ class GitRepo(Base):
     ref = Column(String(255), default='', server_default='', nullable=False)
     user_key = Column(String(255), default='', server_default='',
                       nullable=False)
+    manage_master = Column(Boolean(), nullable=False)

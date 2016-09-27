@@ -52,7 +52,6 @@ class OpenStackConfigPipeline(BasePipeline):
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
         resource_mapping = ExternalGit.ext_settings['resource_mapping']
-        resource_mapping.pop('master_config', {})
         exts_list = utils.get_file_exts_list(resource_mapping)
 
         global_config = utils.get_config_hash(repo_path,
@@ -108,17 +107,17 @@ class OpenStackConfigPipeline(BasePipeline):
         repo = GitRepo.get_by_cluster_id(cluster.id)
         if not repo:
             return data
-        GitRepo.checkout(repo)
-        repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
-        resource_mapping = ExternalGit.ext_settings['resource_mapping']
-        master_config_mapping = resource_mapping.pop('master_config', {})
-        master_config = utils.get_config_hash(
-            repo_path,
-            {'master_config': master_config_mapping},
-            exts=['yaml']
-        )
+        if repo.manage_master:
+            GitRepo.checkout(repo)
+            repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
+            resource_mapping = ExternalGit.ext_settings['master_mapping']
+            master_config = utils.get_config_hash(
+                repo_path,
+                {'master_config': resource_mapping.get('master_config', {})},
+                exts=['yaml']
+            )
 
-        data['master_config'] = master_config
+            data['master_config'] = master_config
         return data
 
 
