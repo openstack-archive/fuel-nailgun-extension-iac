@@ -14,6 +14,7 @@ from sqlalchemy import Column
 from sqlalchemy import Integer
 from sqlalchemy import String
 from sqlalchemy import UnicodeText
+from sqlalchemy import Boolean
 
 from nailgun.db.sqlalchemy.models.base import Base
 
@@ -28,3 +29,4 @@ class GitRepo(Base):
     ref = Column(String(255), default='', server_default='', nullable=False)
     user_key = Column(String(255), default='', server_default='',
                       nullable=False)
+    manage_master = Column(Boolean(), nullable=False)

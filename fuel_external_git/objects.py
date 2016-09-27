@@ -38,7 +38,8 @@ class GitRepoSerializer(BasicSerializer):
         "env_id",
         "git_url",
         "ref",
-        "user_key"
+        "user_key",
+        "manage_master"
     )
 
 
