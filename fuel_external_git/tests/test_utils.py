@@ -18,12 +18,12 @@ from fuel_external_git import utils
 class TestUtils(base.TestCase):
     def test_extension_list(self):
         mapping = {
-            'ceilometer_api_paste_ini': {
-                'alias': 'ceilometer-api-paste.ini',
+            'ceilometer-api-paste.ini': {
+                'resource': 'ceilometer_api_paste_ini',
                 'path': '/etc/ceilometer/api-paste.ini',
             },
-            'ceilometer': {
-                'alias': 'ceilometer.conf',
+            'ceilometer.conf': {
+                'resource': 'ceilometer',
                 'path': '/etc/ceilometer/ceilometer.conf',
             }
         }

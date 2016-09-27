@@ -12,6 +12,7 @@
 
 import os
 import shutil
+import time
 import yaml
 
 from distutils.dir_util import copy_tree
@@ -22,6 +23,7 @@ from fuel_external_git.models import GitRepo
 from git import exc
 from git import Repo
 
+from nailgun.consts import CLUSTER_STATUSES
 from nailgun.db import db
 from nailgun import errors
 from nailgun.logger import logger
@@ -92,6 +94,20 @@ class GitRepo(NailgunObject):
 
     @classmethod
     def checkout(self, instance):
+        fetch_file = os.path.join(
+            const.REPOS_DIR,
+            instance.repo_name,
+            '.git/FETCH_HEAD'
+        )
+        if os.path.exists(fetch_file):
+            current_ts = time.time()
+            cluster = Cluster.get_by_uid(instance.env_id)
+            last_fetch = os.stat(fetch_file).st_mtime
+            if cluster.status != CLUSTER_STATUSES.deployment and \
+                current_ts - last_fetch < const.REPO_TTL:
+                return
+
+        logger.debug("Repo TTL exceeded. Fetching code...")
         ssh_cmd = self._get_ssh_cmd(instance.repo_name)
 
         if not os.path.exists(self._get_key_path(instance.repo_name)):

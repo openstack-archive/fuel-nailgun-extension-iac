@@ -13,17 +13,11 @@
 import os
 from oslo_utils import importutils
 
-from nailgun.db import db
-from nailgun.db.sqlalchemy.models import Cluster
-from nailgun.db.sqlalchemy.models import Release
 from nailgun.logger import logger
 
 
 def get_file_exts_list(resource_mapping):
-    res = set()
-    for resource in resource_mapping.values():
-        res.add(resource['path'].split('.')[-1])
-    return res
+    return set(map(lambda key: key.split('.')[-1], resource_mapping.keys()))
 
 
 def get_config_hash(file_dir, resource_mapping, exts=['conf']):
@@ -33,23 +27,19 @@ def get_config_hash(file_dir, resource_mapping, exts=['conf']):
             "Directory {} not found. Returning emty dict".format(file_dir))
         return {}
 
-    cfg2drv = {}
-    for resource, params in resource_mapping.items():
-        drv = params.get(
-            'driver',
-            'fuel_external_git.drivers.openstack_config.OpenStackConfig'
-        )
-        cfg2drv[params['alias']] = {'drv': drv, 'resource': resource}
-
     conf_files = [conf for conf in os.listdir(file_dir)
                   if conf.split('.')[-1] in exts]
 
     for conf_file in conf_files:
-        if conf_file in cfg2drv.keys():
-            drv_class = importutils.import_class(cfg2drv[conf_file]['drv'])
+        if conf_file in resource_mapping.keys():
+            drv = resource_mapping[conf_file].get(
+                'driver',
+                'fuel_external_git.drivers.openstack_config.OpenStackConfig'
+            )
+            drv_class = importutils.import_class(drv)
             config = drv_class(
                 os.path.join(file_dir, conf_file),
-                cfg2drv[conf_file]['resource']
+                resource_mapping[conf_file]['resource']
             )
             res[config.config_name] = config.to_config_dict()
     return res
@@ -61,24 +51,3 @@ def deep_merge(dct, merge_dct):
             deep_merge(dct[k], merge_dct[k])
         else:
             dct[k] = merge_dct[k]
-
-
-# TODO(dukov) Remove this ugly staff once extension management is available
-def register_extension(ext_name):
-    def decorator(cls):
-        exts = {cl: cl['extensions'] for cl in
-                list(db().query(Cluster).all()) +
-                list(db().query(Release).all())}
-        save = False
-        for obj, extensions in exts.items():
-            if u'fuel_external_git' not in extensions:
-                extensions.append(u'fuel_external_git')
-                extensions = list(set(extensions))
-                obj.extensions = extensions
-                save = True
-                db().flush()
-
-        if save:
-            db().commit()
-        return cls
-    return decorator
