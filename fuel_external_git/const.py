@@ -10,6 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
+AUDIT_TASK_CHECK_INTERVAL = 20
 REPOS_DIR = '/var/lib/fuel_repos'
 REPO_TTL = 1200
 TASK_RETRIES = 10
