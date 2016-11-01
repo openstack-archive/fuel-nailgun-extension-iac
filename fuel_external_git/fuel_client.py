@@ -13,6 +13,7 @@
 from __future__ import absolute_import
 
 import fabric.api
+import logging
 import os
 import time
 
@@ -31,10 +32,12 @@ from fuelclient.common import data_utils
 from fuelclient.objects import Environment
 from fuelclient.objects import Task
 
-from fuel_external_git.const import TASK_HISTORY_URL
-from fuel_external_git.const import TASK_RETRIES
-from fuel_external_git.const import TASK_RETRY_DELAY
+import fuel_external_git.audit as audit
+from fuel_external_git.const import AUDIT_TASK_CHECK_INTERVAL
 from fuel_external_git.settings import GitExtensionSettings
+
+
+LOG = logging.getLogger(__name__)
 
 
 class GitRepoList(lister.Lister, command.Command):
@@ -382,28 +385,57 @@ class AuditRun(lister.Lister, command.Command):
 
     def take_action(self, parsed_args):
         repo_id = parsed_args.repo
-        repos = fc_client.get_request('/clusters/git-repos/')
-        env_id = [repo['env_id'] for repo in repos
-                  if repo['id'] == repo_id][0]
-
-        env = Environment(env_id)
-        # Due to how Nailgun handles such tasks, returned
-        # one will not contain any deployment-related data.
-        # So we'll have to fetch the last noop task with progress < 100
-        env.redeploy_changes(noop_run=True)
-        for retry in xrange(TASK_RETRIES):
-            tasks = Task.get_all()
-            try:
-                task = filter(lambda t: t.data['status'] == 'running' and
-                              t.data['name'] == 'dry_run_deployment',
-                              tasks).pop()
-                break
-            except IndexError:
-                time.sleep(TASK_RETRY_DELAY)
-                continue
-        data = {'task_id': task.id}
+        task_id = audit.audit_run(repo_id)
+        data = {'task_id': task_id}
         data = data_utils.get_display_data_multi(self.columns, [data])
         return (self.columns, data)
+
+
+class AuditEnforce(lister.Lister, command.Command):
+    columns = ()
+
+    def get_parser(self, prog_name):
+        parser = super(AuditEnforce, self).get_parser(prog_name)
+        parser.add_argument('repo',
+                            type=int,
+                            help='Associated Repo ID')
+        return parser
+
+    def take_action(self, parsed_args):
+        repos = fc_client.get_request('/clusters/git-repos/')
+        repo_id = parsed_args.repo
+        audit_task_id = audit.audit_run(repo_id)
+        audit_task = Task(audit_task_id)
+        while audit_task.status == 'running':
+            time.sleep(AUDIT_TASK_CHECK_INTERVAL)
+        changes = audit.get_outofsync(repo_id, audit_task_id)
+        if changes:
+            changed_tasks = [c['task_id'] for c in changes]
+            LOG.info(
+                "Following tasks have outofsync resources: {tasks}".format(
+                    tasks=set(changed_tasks)
+                )
+            )
+            LOG.info(("To get the list of changes, run "
+                      "fuel2 gitrepo outofsync --repo "
+                      "{repo_id} {task_id}").format(repo_id=repo_id,
+                                                   task_id=audit_task_id))
+            env_id = [repo['env_id'] for repo in repos
+                   if repo['id'] == parsed_args.repo][0]
+
+            env = Environment(env_id)
+            LOG.info("Starting enforce run on environment {eid}".format(
+                eid=env_id
+            ))
+            enforce_task_id = env.redeploy_changes()
+            enforce_task = audit.get_running_task('deployment')
+            LOG.info("Enforce task id is {tid}".format(tid=enforce_task.id))
+            while enforce_task.status == 'running':
+                time.sleep(AUDIT_TASK_CHECK_INTERVAL)
+            LOG.info("Enforce task status is {status}".format(
+                status=enforce_task.status
+            ))
+        return ((), {})
 
 
 class OutOfSyncResources(lister.Lister, command.Command):
@@ -425,25 +457,7 @@ class OutOfSyncResources(lister.Lister, command.Command):
 
     def take_action(self, parsed_args):
         task_id = parsed_args.task_id
-        fuel_task = Task(task_id)
-
-        history = fuel_task.connection.get_request(
-            TASK_HISTORY_URL.format(tid=task_id)
-        )
-        changes = []
-        changed_tasks = filter(lambda t: t['status'] != 'skipped' and
-                               t.get('summary', {}) and
-                               t['summary']['resources']['out_of_sync'] > 0,
-                               history)
-        for task in changed_tasks:
-            name = task['task_name']
-            for item in task['summary']['raw_report']:
-                if 'Would have triggered' not in item['message'] and \
-                    'Finished catalog run' not in item['message']:
-                    short_item = item['source'].replace('/Stage[main]/', '')
-                    changes.append({'task_id': name,
-                                    'resource': short_item,
-                                    'node_id': task['node_id']})
+        changes = audit.get_outofsync(repo_id, task_id)
 
         data = data_utils.get_display_data_multi(self.columns, changes)
         return (self.columns, data)
