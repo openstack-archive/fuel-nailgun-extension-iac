@@ -12,3 +12,5 @@
 
 REPOS_DIR = '/var/lib/fuel_repos'
 REPO_TTL = 1200
+TASK_RETRIES = 10
+TASK_RETRY_DELAY = 2
