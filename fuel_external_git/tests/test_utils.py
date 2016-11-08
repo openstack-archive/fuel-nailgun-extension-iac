@@ -11,23 +11,29 @@
 # under the License.
 
 import copy
+
 from fuel_external_git.tests import base
 from fuel_external_git import utils
 
 
 class TestUtils(base.TestCase):
-    def test_extension_list(self):
-        mapping = {
-            'ceilometer-api-paste.ini': {
-                'resource': 'ceilometer_api_paste_ini',
-                'path': '/etc/ceilometer/api-paste.ini',
-            },
-            'ceilometer.conf': {
-                'resource': 'ceilometer',
-                'path': '/etc/ceilometer/ceilometer.conf',
-            }
+    mapping = {
+        'ceilometer-api-paste.ini': {
+            'resource': 'ceilometer_api_paste_ini',
+            'path': '/etc/ceilometer/api-paste.ini',
+        },
+        'ceilometer.conf': {
+            'resource': 'ceilometer',
+            'path': '/etc/ceilometer/ceilometer.conf',
+        },
+        'nova.conf': {
+            'path': '/etc/nova/nova.conf',
+            'resource': 'nova_config',
         }
-        ext_list = utils.get_file_exts_list(mapping)
+    }
+
+    def test_extension_list(self):
+        ext_list = utils.get_file_exts_list(self.mapping)
         self.assertEqual(ext_list, set(['ini', 'conf']))
 
     def test_deep_merge_two_empy(self):
@@ -69,3 +75,23 @@ class TestUtils(base.TestCase):
 
         utils.deep_merge(a, b)
         self.assertEqual(a, result)
+
+    def test_config_hash_dir_ne(self):
+        file_dir = '/a/b/c'
+        resource_mapping = {}
+        cfg = utils.get_config_hash(file_dir, resource_mapping)
+        self.assertEqual(cfg, {})
+
+    def test_config_hash(self):
+        res = {
+            'nova_config': {
+                'DEFAULT/global_param': {
+                    'value': 'global_param'
+                },
+                'DEFAULT/global_param_to_override': {
+                    'value': 'global_param_to_override'
+                }
+            }
+        }
+        actual_res = utils.get_config_hash(self.cfg_sample_dir, self.mapping)
+        self.assertEqual(res, actual_res)
