@@ -41,7 +41,7 @@ def get_config_hash(file_dir, resource_mapping, exts=['conf']):
                 os.path.join(file_dir, conf_file),
                 resource_mapping[conf_file]['resource']
             )
-            res[config.config_name] = config.to_config_dict()
+            deep_merge(res, config.to_config_dict())
     return res
 
 
