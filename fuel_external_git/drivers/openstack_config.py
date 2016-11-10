@@ -56,4 +56,4 @@ class OpenStackConfig(object):
         for key, value in default_items:
             config_resource["DEFAULT/{}".format(key)] = {'value': value}
 
-        return config_resource
+        return {self.config_name: config_resource}
