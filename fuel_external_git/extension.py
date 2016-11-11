@@ -25,8 +25,37 @@ from nailgun.extensions import BasePipeline
 from nailgun.logger import logger
 
 
+# TODO(dukov) add cluster remove callback
 class OpenStackConfigPipeline(BasePipeline):
-    # TODO(dukov) add cluster remove callback
+
+    @classmethod
+    def lcm_v2(cls, repo_path, node_data):
+        roles_dir = os.path.join(repo_path, 'roles')
+        nodes_dir = os.path.join(repo_path, 'nodes')
+        res_mapping = {}
+        node_role_list = node_data.get('roles', [])
+        node_fqdn = node_data['fqdn']
+        yaml_drv = 'fuel_external_git.drivers.yaml_driver.YamlConfig'
+        yaml_list = []
+        if os.path.isdir(roles_dir):
+            yaml_list += os.listdir(roles_dir)
+
+        if os.path.isdir(nodes_dir):
+            yaml_list += os.listdir(nodes_dir)
+
+        for cfg in yaml_list:
+            for node_role in node_role_list:
+                file_name = ".".join(cfg.split('.')[:-1])
+                if file_name in node_role or file_name == node_fqdn:
+                    res_mapping[cfg] = {'driver': yaml_drv, 'resource': 'yaml'}
+        roles_data = utils.get_config_hash(roles_dir,
+                                           res_mapping,
+                                           exts=['yaml'])
+        node_data = utils.get_config_hash(nodes_dir,
+                                          res_mapping,
+                                          exts=['yaml'])
+        utils.deep_merge(roles_data, node_data)
+        return roles_data
 
     @classmethod
     def lcm_v1(cls, node, node_data, repo_path):
@@ -94,7 +123,12 @@ class OpenStackConfigPipeline(BasePipeline):
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
 
-        data = cls.lcm_v1(node, node_data, repo_path)
+        lcm_version = ExternalGit.ext_settings.get('lcm_version', 'v1')
+        if lcm_version == 'v1':
+            data = cls.lcm_v1(node, node_data, repo_path)
+        else:
+            data = cls.lcm_v2(repo_path, node_data)
+
         utils.deep_merge(node_data, data)
         logger.info("Finished serialisation for node {}".format(node.id))
         return node_data
