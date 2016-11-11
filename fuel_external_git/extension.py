@@ -27,20 +27,9 @@ from nailgun.logger import logger
 
 class OpenStackConfigPipeline(BasePipeline):
     # TODO(dukov) add cluster remove callback
+
     @classmethod
-    def process_deployment_for_node(cls, node, node_data):
-        """Updating deployment info
-
-           Genereate OpenStack configuration hash based on configuration files
-           stored in git repository associated with a particular environment
-        """
-        logger.info("Started serialisation for node {}".format(node.id))
-        repo = GitRepo.get_by_cluster_id(node.cluster_id)
-        if not repo:
-            return node_data
-
-        GitRepo.checkout(repo)
-        repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
+    def lcm_v1(cls, node, node_data):
         resource_mapping = ExternalGit.ext_settings['resource_mapping']
         exts_list = utils.get_file_exts_list(resource_mapping)
 
@@ -87,8 +76,25 @@ class OpenStackConfigPipeline(BasePipeline):
 
         utils.deep_merge(common,
                          override_configs['nodes'].get(uid, {}))
+        return {'configuration': common}
 
-        node_data['configuration'] = common
+    @classmethod
+    def process_deployment_for_node(cls, node, node_data):
+        """Updating deployment info
+
+           Genereate OpenStack configuration hash based on configuration files
+           stored in git repository associated with a particular environment
+        """
+        logger.info("Started serialisation for node {}".format(node.id))
+        repo = GitRepo.get_by_cluster_id(node.cluster_id)
+        if not repo:
+            return node_data
+
+        GitRepo.checkout(repo)
+        repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
+
+        data = self.lcm_v1(node, node_data)
+        utils.deep_merge(node_data, data)
         logger.debug("Node {0} config from git {1}".format(uid, common))
         logger.info("Finished serialisation for node {}".format(node.id))
         return node_data
