@@ -1,0 +1,9 @@
+Code-Review+1: Dmitry Nikishov <dnikishov@mirantis.com>
+Code-Review+2: Dmitry Ukov <dukov@mirantis.com>
+Workflow+1: Dmitry Ukov <dukov@mirantis.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Fri, 11 Nov 2016 14:03:11 +0000
+Reviewed-on: https://review.openstack.org/396574
+Project: openstack/fuel-nailgun-extension-iac
+Branch: refs/heads/master
