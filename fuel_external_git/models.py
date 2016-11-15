@@ -30,3 +30,10 @@ class GitRepo(Base):
     user_key = Column(String(255), default='', server_default='',
                       nullable=False)
     manage_master = Column(Boolean(), nullable=False)
+
+
+class ChangesWhitelistRule(Base):
+    __tablename__ = 'fuel_external_git_changes_whitelist'
+    id = Column(Integer, primary_key=True)
+    env_id = Column(Integer, nullable=False)
+    rule = Column(String(255), server_default='', nullable=False)
