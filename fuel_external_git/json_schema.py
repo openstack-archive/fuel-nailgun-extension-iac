@@ -10,7 +10,7 @@
 # License for the specific language governing permissions and limitations
 # under the License.
 
-single_schema = {
+gitrepo_single_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "GitRepo",
     "description": "Serialized GitRepo object",
@@ -25,10 +25,30 @@ single_schema = {
     }
 }
 
-collection_schema = {
+gitrepo_collection_schema = {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "GitRepo Collection",
     "description": "Serialized GitRepo collection",
     "type": "object",
-    "items": single_schema["properties"]
+    "items": gitrepo_single_schema["properties"]
+}
+
+changeswhitelistrule_single_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "ChangesWhitelistRule",
+    "description": "Serialized ChangesWhitelistRule object",
+    "type": "object",
+    "properties": {
+        "id": {"type": "number"},
+        "env_id": {"type": "number"},
+        "rule": {"type": "string"},
+    }
+}
+
+changeswhitelistrule_collection_schema = {
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "ChangesWhitelistRule Collection",
+    "description": "Serialized ChangesWhitelistRule collection",
+    "type": "object",
+    "items": changeswhitelistrule_single_schema["properties"]
 }

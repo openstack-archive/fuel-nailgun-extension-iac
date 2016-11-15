@@ -18,6 +18,7 @@ import yaml
 from distutils.dir_util import copy_tree
 
 from fuel_external_git import const
+from fuel_external_git.models import ChangesWhitelistRule
 from fuel_external_git.models import GitRepo
 
 from git import exc
@@ -42,6 +43,14 @@ class GitRepoSerializer(BasicSerializer):
         "ref",
         "user_key",
         "manage_master"
+    )
+
+
+class ChangesWhitelistRuleSerializer(BasicSerializer):
+    fields = (
+        "id",
+        "env_id",
+        "rule"
     )
 
 
@@ -198,3 +207,21 @@ class GitRepo(NailgunObject):
 
 class GitRepoCollection(NailgunCollection):
     single = GitRepo
+
+
+class ChangesWhitelistRule(NailgunObject):
+    model = ChangesWhitelistRule
+    serializer = ChangesWhitelistRuleSerializer
+
+
+class ChangesWhitelistRuleCollection(NailgunCollection):
+    single = ChangesWhitelistRule
+
+    @classmethod
+    def get_by_env_id(self, env_id):
+        whitelist = set()
+        for rule in ChangesWhitelistRuleCollection.all():
+            if env_id == rule.env_id:
+                whitelist.add(rule)
+
+        return whitelist

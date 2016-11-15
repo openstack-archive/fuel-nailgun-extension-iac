@@ -11,6 +11,8 @@
 # under the License.
 
 from fuel_external_git import json_schema
+from fuel_external_git.objects import ChangesWhitelistRule
+from fuel_external_git.objects import ChangesWhitelistRuleCollection
 from fuel_external_git.objects import GitRepo
 from fuel_external_git.objects import GitRepoCollection
 
@@ -30,8 +32,8 @@ REPOS_DIR = '/var/lib/fuel_repos'
 
 class GitRepoValidator(base.BasicValidator):
 
-    single_schema = json_schema.single_schema
-    collection_schema = json_schema.collection_schema
+    single_schema = json_schema.gitrepo_single_schema
+    collection_schema = json_schema.gitrepo_collection_schema
 
     _blocked_for_update = (
         'env_id',
@@ -75,6 +77,44 @@ class GitRepoValidator(base.BasicValidator):
                 )
 
         return d
+
+
+class ChangesWhitelistRuleValidator(base.BasicValidator):
+
+    single_schema = json_schema.changeswhitelistrule_single_schema
+    collection_schema = json_schema.changeswhitelistrule_collection_schema
+
+    _blocked_for_update = (
+        'env_id',
+    )
+
+    @classmethod
+    def validate_update(self, data, instance):
+        d = self.validate_json(data)
+        for k in self._blocked_for_update:
+            if k in d and getattr(instance, k) != d[k]:
+                raise errors.InvalidData(
+                    u"Changing '{0}' for white list is prohibited".format(k),
+                    log_message=True
+                )
+
+        return d
+
+    # TODO(dnikishov): investigate if there's a more simple way to do this
+    @classmethod
+    def validate_one_or_multiple(self, data):
+        d = self.validate_json(data)
+        if not isinstance(d, list):
+            d = [d]
+        for item in d:
+            self.validate_schema(item, self.single_schema)
+
+        return d
+
+    # This is required for inherited handlers to work
+    @classmethod
+    def validate_delete(self, *args, **kwargs):
+        pass
 
 
 class GitRepoCollectionHandler(CollectionHandler):
@@ -157,3 +197,50 @@ class GitRepoInit(BaseHandler):
         obj = GitRepo.get_by_cluster_id(obj.env_id)
         GitRepo.init(obj)
         raise self.http(200, "{}")
+
+
+class ChangesWhitelistRuleHandler(SingleHandler):
+    single = ChangesWhitelistRule
+    validator = ChangesWhitelistRuleValidator
+
+
+class ChangesWhitelistRuleCollectionHandler(CollectionHandler):
+    collection = ChangesWhitelistRuleCollection
+    validator = ChangesWhitelistRuleValidator
+
+    @handle_errors
+    @validate
+    @serialize
+    def GET(self, env_id):
+        """:returns: JSONized REST object.
+
+        :http: * 200 (OK)
+               * 404 (dashboard entry not found in db)
+        """
+        self.get_object_or_404(objects.Cluster, env_id)
+        rules = self.collection.get_by_env_id(env_id)
+        return self.collection.to_list(rules)
+
+    @handle_errors
+    @serialize
+    def POST(self, env_id):
+        """:returns: JSONized REST object.
+
+        :http: * 201 (object successfully created)
+               * 400 (invalid object data specified)
+               * 409 (object with such parameters already exists)
+        """
+        data = self.checked_data(
+            validate_method=self.validator.validate_one_or_multiple
+        )
+        for item in data:
+            item['env_id'] = env_id
+
+        new_objs = []
+        try:
+            for item in data:
+                new_objs.append(self.collection.create(item))
+        except errors.CannotCreate as exc:
+            raise self.http(400, exc.message)
+
+        raise self.http(201, self.collection.to_json(new_objs))
