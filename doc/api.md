@@ -54,11 +54,12 @@ Input data schema:
 "type": "object",
 "properties": {
     "rule": {"type": "string"},
+    "fuel_task": {"type": "string"},
 }
 ```
 Example
 ```
-curl -H "X-Auth-Token: $(fuel token)" -X PUT http://localhost:8000/api/v1/clusters/changes-whitelist/1 -d '{"rule": "new-rule-string"}'
+curl -H "X-Auth-Token: $(fuel token)" -X PUT http://localhost:8000/api/v1/clusters/changes-whitelist/1 -d '{"rule": "new-rule-string", "fuel_task": "fuel-task-id"}'
 ```
 
 #### DELETE /clusters/changes-whitelist/(obj_id)
@@ -83,10 +84,11 @@ Input data schema:
 "description": "Serialized ChangesWhitelistRule collection",
 "type": "object",
 "items": {
-    "rule": {"type": "string"}
+    "rule": {"type": "string"},
+    "fuel_task": {"fuel_task": "string"},
 }
 ```
 Example
 ```
-curl -H "X-Auth-Token: $(fuel token)" -X POST http://localhost:8000/api/v1/clusters/1/changes-whitelist/ -d '[{"rule": "new-rule-string"}, {"rule": "new-rule-2"}]'
+curl -H "X-Auth-Token: $(fuel token)" -X POST http://localhost:8000/api/v1/clusters/1/changes-whitelist/ -d '[{"rule": "new-rule-string", "fuel_task": "task1"}, {"rule": "new-rule-2", "fuel_task": ""}]'
 ```

@@ -151,7 +151,7 @@ This command will run audit, check the changes and will enforce configuration, i
 Since fuel-library contains non-idempotent tasks, that contain Puppet resources, which will be
 triggered on each deployment run, this extension provides the operator the ability to filter such changes out.
 
-A whitelist rule is a string, that is included into a Puppet report line for the whitelisted resource change, e.g. for
+A whitelist rule is a pair of strings. The first one is a fuel task name to match. The second one is what should be included into a Puppet report line for the whitelisted resource change, e.g. for
 ```
 Openstack_tasks::Swift::Proxy_storage/Package[mc]/ensure
 ```
@@ -159,14 +159,25 @@ the whitelist rule could be
 ```
 Package[mc]/ensure
 ```
+A rule with empty fuel_task filter will match to all tasks.
+
 Whitelist rules for an environment can be listed by
 ```
 fuel2 audit whitelist show <env-id>
 ```
 These rules can be managed by following commands:
 ```
-fuel2 audit whitelist add <env-id> <rule>
+fuel2 audit whitelist add <env-id> --task <fuel-task> --rule <rule>
 fuel2 audit whitelist delete <rule-id>
+fuel2 audit whitelist load fromfile <env-id> <path-to-yaml>
+```
+
+Example YAML file with whitelist rules:
+```
+- fuel_task: netconfig
+  rule: L23_stored_configs
+- fuel_task: top-role-compute
+  rule: Service[nova-compute]/ensure
 ```
 
 ### REST API
