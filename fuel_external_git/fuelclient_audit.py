@@ -205,3 +205,78 @@ class OutOfSyncResources(lister.Lister, command.Command):
 
         data = data_utils.get_display_data_multi(self.columns, changes)
         return (self.columns, data)
+
+
+class WhitelistRulesShow(lister.Lister, command.Command):
+    columns = (
+        'id',
+        'rule'
+    )
+
+    def get_parser(self, prog_name):
+        parser = super(WhitelistRulesShow, self).get_parser(prog_name)
+        parser.add_argument('env',
+                            type=int,
+                            help=('Environment to find whitelist rules '
+                                  'associated with'))
+        return parser
+
+    def take_action(self, parsed_args):
+        env_id = parsed_args.env
+
+        rules = fc_client.get_request(
+            '/clusters/{env}/changes-whitelist/'.format(env=env_id)
+        )
+
+        data = data_utils.get_display_data_multi(self.columns, rules)
+        return (self.columns, data)
+
+
+class WhitelistRuleAdd(lister.Lister, command.Command):
+    columns = (
+        'id',
+        'rule'
+    )
+
+    def get_parser(self, prog_name):
+        parser = super(WhitelistRuleAdd, self).get_parser(prog_name)
+        parser.add_argument('env',
+                            type=int,
+                            help='Environment to add whitelist rules to')
+        parser.add_argument('rule',
+                            type=str,
+                            help='Rule to add')
+        return parser
+
+    def take_action(self, parsed_args):
+        env_id = parsed_args.env
+        rule = parsed_args.rule
+        data = {'rule': rule}
+
+        ret = fc_client.post_request(
+            '/clusters/{env}/changes-whitelist/'.format(env=env_id),
+            data
+        )
+        ret = data_utils.get_display_data_multi(self.columns, ret)
+
+        return (self.columns, ret)
+
+
+class WhitelistRuleDelete(command.Command):
+    columns = ()
+
+    def get_parser(self, prog_name):
+        parser = super(WhitelistRuleDelete, self).get_parser(prog_name)
+        parser.add_argument('rule_id',
+                            type=int,
+                            help='Rule ID to delete')
+        return parser
+
+    def take_action(self, parsed_args):
+        rule_id = parsed_args.rule_id
+
+        fc_client.delete_request(
+            '/clusters/changes-whitelist/{rule}'.format(rule=rule_id)
+        )
+
+        return ((), {})
