@@ -233,9 +233,6 @@ class ChangesWhitelistRuleCollection(NailgunCollection):
 
     @classmethod
     def get_by_env_id(self, env_id):
-        whitelist = set()
-        for rule in ChangesWhitelistRuleCollection.all():
-            if env_id == rule.env_id:
-                whitelist.add(rule)
-
+        whitelist = filter(lambda r: r.env_id == env_id,
+                           ChangesWhitelistRuleCollection.all())
         return whitelist
