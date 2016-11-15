@@ -53,7 +53,7 @@ class Audit(lister.Lister, command.Command):
                 time.sleep(TASK_RETRY_DELAY)
                 continue
         return task
-    
+
     @staticmethod
     def start_noop_run(env):
         # Due to how Nailgun handles such tasks, returned
