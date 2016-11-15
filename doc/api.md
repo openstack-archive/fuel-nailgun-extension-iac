@@ -35,3 +35,58 @@ Example:
 ```
 curl -X PUT -H 'X-Auth-Token: $(fuel token)' http://localhost:8000/api/v1/clusters/4/git-repos/2 -d '{"ref": "master"}'
 ```
+
+
+#### GET /clusters/changes-whitelist/(obj_id)
+Returns the serialized whitelist rule object
+Example
+```
+curl -H "X-Auth-Token: $(fuel token)" http://localhost:8000/api/v1/clusters/changes-whitelist/1
+```
+
+#### PUT /clusters/changes-whitelist/(obj_id)
+Updates a whitelist rule
+Input data schema:
+```
+"$schema": "http://json-schema.org/draft-04/schema#",
+"title": "ChangesWhitelistRule",
+"description": "Serialized ChangesWhitelistRule object",
+"type": "object",
+"properties": {
+    "rule": {"type": "string"},
+}
+```
+Example
+```
+curl -H "X-Auth-Token: $(fuel token)" -X PUT http://localhost:8000/api/v1/clusters/changes-whitelist/1 -d '{"rule": "new-rule-string"}'
+```
+
+#### DELETE /clusters/changes-whitelist/(obj_id)
+Deletes a whitelist rule
+Example
+```
+curl -H "X-Auth-Token: $(fuel token)" -X DELETE http://localhost:8000/api/v1/clusters/changes-whitelist/1
+```
+
+#### GET /clusters/(env_id)/changes-whitelist/
+Returns the whitelist rules for a specified environment
+Example
+```
+curl -H "X-Auth-Token: $(fuel token)" http://localhost:8000/api/v1/clusters/1/changes-whitelist/
+```
+#### POST /clusters/(env_id)/changes-whitelist/
+Creates one or more whitelist rule(s)
+Input data schema:
+```
+"$schema": "http://json-schema.org/draft-04/schema#",
+"title": "ChangesWhitelistRule Collection",
+"description": "Serialized ChangesWhitelistRule collection",
+"type": "object",
+"items": {
+    "rule": {"type": "string"}
+}
+```
+Example
+```
+curl -H "X-Auth-Token: $(fuel token)" -X POST http://localhost:8000/api/v1/clusters/1/changes-whitelist/ -d '[{"rule": "new-rule-string"}, {"rule": "new-rule-2"}]'
+```

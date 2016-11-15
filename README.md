@@ -28,8 +28,11 @@ Than enable extension for a particular environment
 
 ### How to Use
 
-This extension introduces set of additional Fuel CLI commands which allows the operator to
-associate a git repo with a particular environment and preform CRUD operations on this repo.
+This extension introduces two sets of additional Fuel CLI commands. The first set allows the
+operator to associate a git repo with a particular environment and preform CRUD operations on
+this repo. The second set allows the operator to execute audit and enforce operations on the
+environment as well as list the changes made to configuration. It also allows to manage white
+lists for these changes.
 See details [here](./doc/cli.md).
 ```
   gitrepo create
@@ -38,6 +41,13 @@ See details [here](./doc/cli.md).
   gitrepo init
   gitrepo list
   gitrepo update
+
+  audit enforce
+  audit noop
+  audit list outofsync
+  audit whitelist show
+  audit whitelist add
+  audit whitelist delete
 ```
 Create repository and configure nailgun to use it.
 ```
@@ -104,6 +114,60 @@ roles:
 ```
 Configuration files for Role and Node levels should be placed in corresponding directory described
 in overrides.yaml
+
+### Audit and enforcement
+This feature enables the operator to audit the changes made to the environment as well as enforce
+configuration.
+
+```
+fuel2 audit noop --env <env-id> || --repo <repo-id>
+```
+Audit is basically a Fuel graph run with noop flag set. This runs the whole graph and records Puppet resources, that would have changed their state. The command above is equivalent to
+```
+fuel2 env redeploy --noop <env-id>
+```
+
+After the audit run, the operator is able to list the changes to the state of Puppet resources on the environment via following command:
+```
+fuel2 audit list outofsync --task <noop-task-id> || --repo <repo-id>
+```
+This is a convenient alternative to the stock command:
+```
+fuel2 task history show <noop-task-id> --include-summary
+```
+
+To enforce configuration state, the operator can issue a stock redeploy command:
+```
+fuel2 env redeploy <env-id>
+```
+
+To perform the whole audit-enforce process automatically, this extension provides the following command:
+```
+fuel2 audit enforce --env <env-id> || --repo <repo-id>
+```
+This command will run audit, check the changes and will enforce configuration, if needed.
+
+### Audit changes whitelisting
+Since fuel-library contains non-idempotent tasks, that contain Puppet resources, which will be
+triggered on each deployment run, this extension provides the operator the ability to filter such changes out.
+
+A whitelist rule is a string, that is included into a Puppet report line for the whitelisted resource change, e.g. for
+```
+Openstack_tasks::Swift::Proxy_storage/Package[mc]/ensure
+```
+the whitelist rule could be
+```
+Package[mc]/ensure
+```
+Whitelist rules for an environment can be listed by
+```
+fuel2 audit whitelist show <env-id>
+```
+These rules can be managed by following commands:
+```
+fuel2 audit whitelist add <env-id> <rule>
+fuel2 audit whitelist delete <rule-id>
+```
 
 ### REST API
 API documentation can be found [here](./doc/api.md)

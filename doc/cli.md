@@ -48,3 +48,39 @@ To get more detailed description use:
 ```
 fuel2 help <command>
 ```
+
+##### Audit and enforce
+These commands allow to perform audit and enforce configuration on the environment as well as to list the changes made to it.
+
+To perform the audit run on the environment:
+```
+fuel2 audit noop --env <env-id> || --repo <repo-id>
+```
+
+To list the changes:
+```
+fuel2 audit list outofsync --task <noop-task-id> || --env <env-id>
+```
+
+To perform audit run, inspect changes and enforce configuration, if needed:
+```
+fuel2 audit enforce --env <env-id> || --repo <repo-id>
+```
+
+##### Changes whitelist commands
+These commands manage the rules, that allow to ignore certain changes to configuration.
+
+To show rules whitelist for the environment:
+```
+fuel2 audit whitelist show <env-id>
+```
+
+To add a rule:
+```
+fuel2 audit whitelist add <env-id> <rule>
+```
+
+To delete a rule:
+```
+fuel2 audit whitelist delete <rule-id>
+```
