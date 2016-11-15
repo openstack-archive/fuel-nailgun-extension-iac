@@ -264,9 +264,12 @@ class ChangesWhitelistRuleCollectionHandler(CollectionHandler):
         :http: * 200 (OK)
                * 404 (dashboard entry not found in db)
         """
+        env_id = int(env_id)
         self.get_object_or_404(objects.Cluster, env_id)
         rules = self.collection.get_by_env_id(env_id)
-        return self.collection.to_list(rules)
+        if rules:
+            rules = self.collection.to_list(rules)
+        return rules
 
     @handle_errors
     @serialize
@@ -277,11 +280,26 @@ class ChangesWhitelistRuleCollectionHandler(CollectionHandler):
                * 400 (invalid object data specified)
                * 409 (object with such parameters already exists)
         """
+        env_id = int(env_id)
         data = self.checked_data(
             validate_method=self.validator.validate_one_or_multiple
         )
         for item in data:
             item['env_id'] = env_id
+
+        rules = self.collection.get_by_env_id(env_id)
+        existing_rules = []
+        if rules:
+            rules = self.collection.to_list(rules)
+            existing_rules = filter(
+                lambda i: len(filter(lambda o:
+                                     i['fuel_task'] == o['fuel_task'] and
+                                     i['rule'] == o['rule'],
+                                     rules)) > 0,
+                data
+            )
+        if existing_rules:
+            raise self.http(409, existing_rules)
 
         new_objs = []
         try:
