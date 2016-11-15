@@ -17,6 +17,7 @@ import time
 
 from cliff import command
 from cliff import lister
+import yaml
 
 from fuelclient import client
 if hasattr(client, 'DefaultAPIClient'):
@@ -76,12 +77,25 @@ class Audit(lister.Lister, command.Command):
         for task in changed_tasks:
             name = task['task_name']
             for item in task['summary']['raw_report']:
-                if 'Would have triggered' not in item['message'] and \
-                    'Finished catalog run' not in item['message']:
+                if item['source'].startswith('/Stage[main]/'):
                     short_item = item['source'].replace('/Stage[main]/', '')
                     changes.append({'task_id': name,
                                     'resource': short_item,
                                     'node_id': task['node_id']})
+        return changes
+
+    @staticmethod
+    def filter_changes(changes, env_id):
+        wl = fc_client.get_request(
+            '/clusters/{env}/changes-whitelist/'.format(env=env_id)
+        )
+
+        changes = filter(lambda c:
+                         len(filter(lambda w: w['rule'] in c['resource'] and
+                                    (w['fuel_task'] == c['task_id'] or
+                                     w['fuel_task'] == ''), wl) == 0),
+                         changes)
+
         return changes
 
     def get_parser(self, prog_name):
@@ -201,7 +215,10 @@ class OutOfSyncResources(lister.Lister, command.Command):
         else:
             fuel_task = Task(task_id)
 
+        env_id = fuel_task.data['cluster']
+
         changes = Audit.get_outofsync(fuel_task)
+        changes = Audit.filter_changes(changes, env_id)
 
         data = data_utils.get_display_data_multi(self.columns, changes)
         return (self.columns, data)
@@ -210,6 +227,7 @@ class OutOfSyncResources(lister.Lister, command.Command):
 class WhitelistRulesShow(lister.Lister, command.Command):
     columns = (
         'id',
+        'fuel_task',
         'rule'
     )
 
@@ -235,6 +253,7 @@ class WhitelistRulesShow(lister.Lister, command.Command):
 class WhitelistRuleAdd(lister.Lister, command.Command):
     columns = (
         'id',
+        'fuel_task',
         'rule'
     )
 
@@ -243,15 +262,24 @@ class WhitelistRuleAdd(lister.Lister, command.Command):
         parser.add_argument('env',
                             type=int,
                             help='Environment to add whitelist rules to')
-        parser.add_argument('rule',
+        parser.add_argument('--rule', '-r',
                             type=str,
+                            required=True,
                             help='Rule to add')
+        parser.add_argument('--task', '-t',
+                            type=str,
+                            required=False,
+                            help=('Fuel task for the rule. Omitting this will'
+                                  ' result in matching all Fuel tasks.'))
         return parser
 
     def take_action(self, parsed_args):
         env_id = parsed_args.env
         rule = parsed_args.rule
+        task = parsed_args.task
         data = {'rule': rule}
+        if task:
+            data['fuel_task'] = task
 
         ret = fc_client.post_request(
             '/clusters/{env}/changes-whitelist/'.format(env=env_id),
@@ -280,3 +308,36 @@ class WhitelistRuleDelete(command.Command):
         )
 
         return ((), {})
+
+
+class WhitelistRuleAddFromFile(lister.Lister, command.Command):
+    columns = (
+        'id',
+        'fuel_task',
+        'rule'
+    )
+
+    def get_parser(self, prog_name):
+        parser = super(WhitelistRuleAddFromFile, self).get_parser(prog_name)
+        parser.add_argument('env',
+                            type=int,
+                            help='Environment to add whitelist rules to')
+        parser.add_argument('file_name',
+                            type=str,
+                            help='YAML file to load rules from')
+        return parser
+
+    def take_action(self, parsed_args):
+        env_id = parsed_args.env
+        file_name = parsed_args.file_name
+
+        with open(file_name, 'r') as f:
+            data = yaml.load(f)
+
+        ret = fc_client.post_request(
+            '/clusters/{env}/changes-whitelist/'.format(env=env_id),
+            data
+        )
+        ret = data_utils.get_display_data_multi(self.columns, ret)
+
+        return (self.columns, ret)

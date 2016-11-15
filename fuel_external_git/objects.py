@@ -50,7 +50,8 @@ class ChangesWhitelistRuleSerializer(BasicSerializer):
     fields = (
         "id",
         "env_id",
-        "rule"
+        "rule",
+        "fuel_task"
     )
 
 

@@ -37,3 +37,4 @@ class ChangesWhitelistRule(Base):
     id = Column(Integer, primary_key=True)
     env_id = Column(Integer, nullable=False)
     rule = Column(String(255), server_default='', nullable=False)
+    fuel_task = Column(String(255), server_default='', nullable=False)

@@ -42,6 +42,7 @@ changeswhitelistrule_single_schema = {
         "id": {"type": "number"},
         "env_id": {"type": "number"},
         "rule": {"type": "string"},
+        "fuel_task": {"type": "string"},
     }
 }
 
