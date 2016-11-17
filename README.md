@@ -180,5 +180,12 @@ Example YAML file with whitelist rules:
   rule: Service[nova-compute]/ensure
 ```
 
+The default whitelist can be loaded with following command
+```
+fuel2 audit whitelist load fromfile <env-id> /usr/lib/python2.7/site-packages/fuel_external_git/default_whitelist.yaml
+```
+Note: this whitelist is not complete as it has been put together on following configuration:
+MOS 9.1, Ubuntu, 1 controller, 1 compute+cinder lvm, Neutron GRE.
+
 ### REST API
 API documentation can be found [here](./doc/api.md)
