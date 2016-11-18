@@ -86,14 +86,18 @@ class Audit(lister.Lister, command.Command):
 
     @staticmethod
     def filter_changes(changes, env_id):
-        wl = fc_client.get_request(
+        whitelist = fc_client.get_request(
             '/clusters/{env}/changes-whitelist/'.format(env=env_id)
         )
 
-        changes = filter(lambda c:
-                         len(filter(lambda w: w['rule'] in c['resource'] and
-                                    (w['fuel_task'] == c['task_id'] or
-                                     w['fuel_task'] == ''), wl)) == 0,
+        matched_rules = lambda change: filter(
+            lambda rule: rule['rule'] in change['resource'] and
+            (rule['fuel_task'] == change['task_id'] or
+             rule['fuel_task'] == ''),
+            whitelist
+        )
+
+        changes = filter(lambda c: len(matched_rules(c)) == 0,
                          changes)
 
         return changes
