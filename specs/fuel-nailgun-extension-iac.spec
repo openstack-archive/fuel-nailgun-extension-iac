@@ -20,7 +20,7 @@ Nailgun extension that generates deployment data based on configuration files
 published in external git repository
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -c -n %{name}-%{version}
 
 %build
 %py2_build
