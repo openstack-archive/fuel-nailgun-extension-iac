@@ -38,7 +38,6 @@ See details [here](./doc/cli.md).
   gitrepo create
   gitrepo delete
   gitrepo get configs
-  gitrepo init
   gitrepo list
   gitrepo update
 
@@ -53,11 +52,6 @@ Create repository and configure nailgun to use it.
 ```
 fuel2 gitrepo create --env 1 --name oscnf1 --url git@github.com:dukov/oscnf.git --ref master \
   --key .ssh/id_rsa
-```
-Next create repository structure. This can be done manually
-(see Repo structure description below) or extension can automatically generate basic structure.
-```
-fuel2 gitrepo init --repo 11
 ```
 In order to track configuration evolution it is possible to download all configuration files from
 the environment into **separate** branch of configured Git repository. User which has been

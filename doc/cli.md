@@ -16,16 +16,6 @@ For example:
 fuel2 gitrepo create --env 1 --name oscnf1 --url git@github.com:dukov/oscnf.git --ref master --key .ssh/id_rsa
 ```
 
-##### (Optional) When repo added to environment user may want to initialise new repository with basic settings and tools
-```
-fuel2 gitrepo init [-h] --repo REPO
-
-  --repo REPO  Repo ID to init
-```
-For example:
-```
-fuel2 gitrepo init --repo 11
-```
 ##### (Optional) User can download supported config files from the environment and upload them to configured git repository
 ```
 fuel2 gitrepo get configs [-h] [--env ENV] [--key_path KEY_PATH]

@@ -16,7 +16,6 @@ from fuel_external_git.objects import ChangesWhitelistRuleCollection
 from fuel_external_git.objects import GitRepo
 from fuel_external_git.objects import GitRepoCollection
 
-from nailgun.api.v1.handlers.base import BaseHandler
 from nailgun.api.v1.handlers.base import CollectionHandler
 from nailgun.api.v1.handlers.base import handle_errors
 from nailgun.api.v1.handlers.base import serialize
@@ -179,24 +178,6 @@ class GitRepoHandler(SingleHandler):
         d_e = self.get_object_or_404(self.single, obj_id)
         self.single.delete(d_e)
         raise self.http(204)
-
-
-class GitRepoInit(BaseHandler):
-
-    @handle_errors
-    @validate
-    @serialize
-    def PUT(self, env_id, obj_id):
-        """:returns: JSONized REST object.
-
-        :http: * 200 (OK)
-               * 400 (invalid object data specified)
-               * 404 (object not found in db)
-        """
-        obj = self.get_object_or_404(GitRepo, obj_id)
-        obj = GitRepo.get_by_cluster_id(obj.env_id)
-        GitRepo.init(obj)
-        raise self.http(200, "{}")
 
 
 class ChangesWhitelistRuleHandler(SingleHandler):
