@@ -20,15 +20,16 @@ from cliff import lister
 from git import Repo
 
 from fuelclient import client
+from fuelclient.common import data_utils
+
+from fuel_external_git.settings import GitExtensionSettings
+
 if hasattr(client, 'DefaultAPIClient'):
     # Handling python-fuelclient version >= 10.0
     fc_client = client.DefaultAPIClient
 else:
     # Handling python-fuelclient version <= 9.0
     fc_client = client.APIClient
-from fuelclient.common import data_utils
-
-from fuel_external_git.settings import GitExtensionSettings
 
 
 class GitRepoList(lister.Lister, command.Command):
@@ -238,30 +239,6 @@ class UpdateRepo(command.Command):
 
         fc_client.put_request(path.format(env, parsed_args.repo), data)
         return (self.columns, data)
-
-
-class InitRepo(command.Command):
-    columns = (
-        'id'
-    )
-
-    def get_parser(self, prog_name):
-        parser = super(InitRepo, self).get_parser(prog_name)
-        parser.add_argument('--repo',
-                            type=int,
-                            help='Repo ID to init',
-                            required=True)
-        return parser
-
-    def take_action(self, parsed_args):
-        repo_id = parsed_args.repo
-        repos = fc_client.get_request('/clusters/git-repos/')
-        env = [repo['env_id'] for repo in repos
-               if repo['id'] == parsed_args.repo][0]
-
-        init_path = "/clusters/{0}/git-repos/{1}/init"
-        fc_client.put_request(init_path.format(env, repo_id), {})
-        return (self.columns, {})
 
 
 class DownloadConfgs(command.Command):
