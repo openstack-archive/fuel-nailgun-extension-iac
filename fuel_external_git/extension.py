@@ -166,9 +166,6 @@ class ExternalGit(BaseExtension):
             {'uri':
                 r'/clusters/(?P<cluster_id>\d+)/git-repos/(?P<obj_id>\d+)?$',
              'handler': handlers.GitRepoHandler},
-            {'uri':
-                r'/clusters/(?P<env_id>\d+)/git-repos/(?P<obj_id>\d+)/init?$',
-             'handler': handlers.GitRepoInit},
             {'uri': r'/clusters/(?P<env_id>\d+)/changes-whitelist/$',
              'handler': handlers.ChangesWhitelistRuleCollectionHandler},
             {'uri': r'/clusters/changes-whitelist/(?P<obj_id>\d+)?$',
