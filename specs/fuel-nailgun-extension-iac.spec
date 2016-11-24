@@ -20,13 +20,14 @@ Nailgun extension that generates deployment data based on configuration files
 published in external git repository
 
 %prep
-%setup -q -n %{name}-%{version}
+%setup -q -c -n %{name}-%{version}
 
 %build
-%py2_build
+cd %{_builddir}/%{name}-%{version} && OSLO_PACKAGE_VERSION=%{version} %{__python2} setup.py build
 
 %install
-%py2_install
+rm -rf $RPM_BUILD_ROOT
+cd %{_builddir}/%{name}-%{version} && OSLO_PACKAGE_VERSION=%{version} %{__python2} setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT
 
 %files
 %license LICENSE
