@@ -66,8 +66,9 @@ class GitRepo(NailgunObject):
             except exc.NoSuchPathError:
                 logger.debug("Repo folder does not exist. Cloning repo")
                 self._create_key_file(instance.repo_name, instance.user_key)
-                os.environ['GIT_SSH'] = \
-                    self._get_ssh_cmd(instance.repo_name)
+                if instance.user_key:
+                    os.environ['GIT_SSH'] = \
+                        self._get_ssh_cmd(instance.repo_name)
 
                 repo_path = os.path.join(const.REPOS_DIR, instance.repo_name)
                 repo = Repo.clone_from(instance.git_url, repo_path)
@@ -83,8 +84,10 @@ class GitRepo(NailgunObject):
             logger.debug('Repo directory exists. Removing...')
             shutil.rmtree(repo_path)
 
-        self._create_key_file(data['repo_name'], data['user_key'])
-        os.environ['GIT_SSH'] = self._get_ssh_cmd(data['repo_name'])
+        user_key = data.get('user_key', '')
+        if user_key:
+            self._create_key_file(data['repo_name'], user_key)
+            os.environ['GIT_SSH'] = self._get_ssh_cmd(data['repo_name'])
         repo = Repo.clone_from(data['git_url'], repo_path)
 
         instance = super(GitRepo, self).create(data)
@@ -114,13 +117,18 @@ class GitRepo(NailgunObject):
                 return
 
         logger.debug("Repo TTL exceeded. Fetching code...")
-        ssh_cmd = self._get_ssh_cmd(instance.repo_name)
+        git_shell_env = {}
+        if instance.user_key:
+            ssh_cmd = self._get_ssh_cmd(instance.repo_name)
 
-        if not os.path.exists(self._get_key_path(instance.repo_name)):
-            logger.debug('Key file does not exist. Creating...')
-            self._create_key_file(instance.repo_name)
+            if not os.path.exists(self._get_key_path(instance.repo_name)):
+                logger.debug('Key file does not exist. Creating...')
+                self._create_key_file(instance.repo_name)
 
-        with instance.repo.git.custom_environment(GIT_SSH=ssh_cmd):
+            logger.debug("Updating ENV with ssh command")
+            git_shell_env['GIT_SSH'] = ssh_cmd
+
+        with instance.repo.git.custom_environment(**git_shell_env):
             commit = instance.repo.remotes.origin.fetch(refspec=instance.ref)
             commit = commit[0].commit
             instance.repo.head.reference = commit
