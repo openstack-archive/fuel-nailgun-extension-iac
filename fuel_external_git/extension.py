@@ -115,7 +115,7 @@ class OpenStackConfigPipeline(BasePipeline):
            Genereate OpenStack configuration hash based on configuration files
            stored in git repository associated with a particular environment
         """
-        logger.info("Started serialisation for node {}".format(node.id))
+        logger.info("Started serialization for node {}".format(node.id))
         repo = GitRepo.get_by_cluster_id(node.cluster_id)
         if not repo:
             return node_data
@@ -130,19 +130,21 @@ class OpenStackConfigPipeline(BasePipeline):
             data = cls.lcm_v2(repo_path, node_data)
 
         utils.deep_merge(node_data, data)
-        logger.info("Finished serialisation for node {}".format(node.id))
+        logger.info("Finished serialization for node {}".format(node.id))
         return node_data
 
     @classmethod
     def process_deployment_for_cluster(self, cluster, data):
-        logger.info("Started serialisation for cluster {}".format(cluster.id))
+        logger.info("Started serialization for cluster {}".format(cluster.id))
         repo = GitRepo.get_by_cluster_id(cluster.id)
         if not repo:
             return data
 
+        repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
+        yaml_drv = 'fuel_external_git.drivers.yaml_driver.YamlConfig'
+
         if repo.manage_master:
             GitRepo.checkout(repo)
-            repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
             resource_mapping = ExternalGit.ext_settings['master_mapping']
             master_config = utils.get_config_hash(
                 repo_path,
@@ -152,7 +154,21 @@ class OpenStackConfigPipeline(BasePipeline):
 
             data['master_config'] = master_config
 
-        logger.info("Finished serialisation for cluster {}".format(cluster.id))
+        overrides = {}
+        for override in ('global.yaml', 'cluster.yaml'):
+            res_mapping = {
+                override: {
+                    'driver': yaml_drv,
+                    'resource': 'yaml'
+                }
+            }
+            override_data = utils.get_config_hash(repo_path,
+                                                  res_mapping,
+                                                  exts=['yaml'])
+            utils.deep_merge(overrides, override_data)
+
+        utils.deep_merge(data, overrides)
+        logger.info("Finished serialization for cluster {}".format(cluster.id))
         return data
 
 
