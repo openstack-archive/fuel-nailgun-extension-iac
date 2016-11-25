@@ -1,3 +1,10 @@
+Team and repository tags
+========================
+
+[![Team and repository tags](http://governance.openstack.org/badges/fuel-nailgun-extension-iac.svg)](http://governance.openstack.org/reference/tags/index.html)
+
+<!-- Change things from this point on -->
+
 # Nailgun API Extension with External Git Server
 ### About
 Nailgun extension that generates deployment data based on configuration files published in external
