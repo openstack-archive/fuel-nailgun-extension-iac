@@ -23,10 +23,10 @@ published in external git repository
 %setup -q -c -n %{name}-%{version}
 
 %build
-%py2_build
+export OSLO_PACKAGE_VERSION=%{version} %py2_build
 
 %install
-%py2_install
+export OSLO_PACKAGE_VERSION=%{version} %py2_install
 
 %files
 %license LICENSE
