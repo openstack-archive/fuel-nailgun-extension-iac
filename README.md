@@ -63,51 +63,48 @@ fuel2 gitrepo get configs --env 1
 Here is the example repo structure
 ```
 .
-|-- controller_configs
-|   `-- glance-api.conf
-|-- node_1_configs
-|   `-- nova.conf
-|-- nova.conf
-|-- overrides.yaml
-`-- tools
-    `-- show-config-for.py
+|-- cluster.yaml
+|-- nodes
+|   `-- node-1.domain.local.yaml
+`-- roles
+    |-- compute.yaml
+    |-- controller.yaml
+    `-- primary-controller.yaml
 ```
-There are three levels of configuration: Global, Role, Node. Each level has higher priority in terms
+There are three levels of configuration: Cluster, Role, Node. Each level has higher priority in terms
 of configuration parameters.
-* Global - configuration parameters from all configs from this level will be applied to all nodes
+* Cluster - configuration parameters from all configs from this level will be applied to all nodes
   in environment.
 * Role - configuration parameters from all configs from this level will be applied to nodes with a
   particular role. Parameters from this level will override parameters from Global level
 * Node - configuration parameters from all configs from this level will be applied to node with a
   particular id. Parameters from this level will override parameters from Global and Role levels
 
-For example we have ```nova.conf``` file with ```debug = True``` in Global level and ```nova.conf```
-with ```debug = False```  in Role level. Resulting configuration will be:
+For example we have following contents of the files
 ```
-[DEFAULT]
-debug = False
+# cat cluster.yaml
+configuration:
+    nova_config:
+        'DEFAULT/nova_test':
+            value: cluster_param
+        'DEFAULT/another_param':
+            value: another_param_value
+
+# cat roles/primary-controller.yaml
+configuration:
+    nova_config:
+        'DEFAULT/nova_test':
+            value: controller_param
 ```
-Configuration files for Global level should be placed in repo root. Role and Node levels should be
-described in overrides.yaml placed in repo root directory using following format
+Resulting configuration Hash will be:
 ```
-nodes:
-  '<node_id>': '<directory_name>'
-roles:
-  '<role_name>': '<directory_name>'
+configuration:
+    nova_config:
+        'DEFAULT/nova_test':
+            value: controller_param
+        'DEFAULT/another_param':
+            value: another_param_value
 ```
-Example overrides.yaml
-```
-nodes:
-  '1': node_1_configs
-  '2': node_2_configs
-roles:
-  'cinder': 'cinder_configs'
-  'compute': 'compute_configs'
-  'controller': 'controller_configs'
-  'primary-controller': 'controller_configs'
-```
-Configuration files for Role and Node levels should be placed in corresponding directory described
-in overrides.yaml
 
 ### Audit and enforcement
 This feature enables the operator to audit the changes made to the environment as well as enforce
