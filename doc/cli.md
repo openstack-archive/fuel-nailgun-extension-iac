@@ -70,9 +70,9 @@ To add a rule:
 fuel2 audit whitelist add <env-id> --task <fuel-task> --rule <rule>
 ```
 
-To delete a rule:
+To delete a rule or set of rules:
 ```
-fuel2 audit whitelist delete <rule-id>
+fuel2 audit whitelist delete <rule-id> [<rule-id> ... ]
 ```
 
 To add rules from YAML file:

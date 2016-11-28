@@ -309,15 +309,17 @@ class WhitelistRuleDelete(command.Command):
         parser = super(WhitelistRuleDelete, self).get_parser(prog_name)
         parser.add_argument('rule_id',
                             type=int,
+                            nargs='+',
                             help='Rule ID to delete')
         return parser
 
     def take_action(self, parsed_args):
-        rule_id = parsed_args.rule_id
+        rule_ids = parsed_args.rule_id
 
-        fc_client.delete_request(
-            '/clusters/changes-whitelist/{rule}'.format(rule=rule_id)
-        )
+        for rule in rule_ids:
+            fc_client.delete_request(
+                '/clusters/changes-whitelist/{rule}'.format(rule=rule)
+            )
 
         return ((), {})
 

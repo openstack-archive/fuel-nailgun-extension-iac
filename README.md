@@ -162,7 +162,7 @@ fuel2 audit whitelist show <env-id>
 These rules can be managed by following commands:
 ```
 fuel2 audit whitelist add <env-id> --task <fuel-task> --rule <rule>
-fuel2 audit whitelist delete <rule-id>
+fuel2 audit whitelist delete <rule-id> [<rule-id> ...]
 fuel2 audit whitelist load fromfile <env-id> <path-to-yaml>
 ```
 
