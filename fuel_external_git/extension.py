@@ -123,7 +123,7 @@ class OpenStackConfigPipeline(BasePipeline):
         GitRepo.checkout(repo)
         repo_path = os.path.join(const.REPOS_DIR, repo.repo_name)
 
-        lcm_version = ExternalGit.ext_settings.get('lcm_version', 'v1')
+        lcm_version = ExternalGit.ext_settings.get('lcm_version', 'v2')
         if lcm_version == 'v1':
             data = cls.lcm_v1(node, node_data, repo_path)
         else:
