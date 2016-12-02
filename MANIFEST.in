@@ -2,5 +2,6 @@ include AUTHORS
 include ChangeLog
 exclude .gitignore
 exclude .gitreview
+recursive-include fuel_external_git *
 
 global-exclude *.pyc
