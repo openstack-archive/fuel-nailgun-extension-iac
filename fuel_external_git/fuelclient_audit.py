@@ -355,3 +355,44 @@ class WhitelistRuleAddFromFile(lister.Lister, command.Command):
         ret = data_utils.get_display_data_multi(self.columns, ret)
 
         return (self.columns, ret)
+
+
+class WhitelistRuleAddAll(OutOfSyncResources):
+    columns = (
+        'id',
+        'fuel_task',
+        'rule'
+    )
+
+    def take_action(self, parsed_args):
+        task_id = parsed_args.task
+        if not task_id:
+            all_tasks = Task.get_all()
+            env_tasks = filter(
+                lambda t: t.data['cluster'] == parsed_args.env and
+                t.data['name'] == 'dry_run_deployment',
+                all_tasks)
+            env_tasks.sort(key=lambda t: t.data['time_start'])
+            fuel_task = env_tasks[-1]
+        else:
+            fuel_task = Task(task_id)
+
+        env_id = fuel_task.data['cluster']
+
+        changes = Audit.get_outofsync(fuel_task)
+
+        remap = lambda x: {
+            'fuel_task': x['task_id'],
+            'rule': x['resource'][:254]
+        }
+        remap_changes = map(remap, changes)
+        uniq_data = set(map(lambda x: tuple(x.items()), remap_changes))
+        data = map(lambda x: dict(x), uniq_data)
+
+        ret = fc_client.post_request(
+            '/clusters/{env}/changes-whitelist/'.format(env=env_id),
+            data
+        )
+        ret = data_utils.get_display_data_multi(self.columns, ret)
+
+        return (self.columns, ret)
